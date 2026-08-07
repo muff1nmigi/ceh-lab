@@ -1,12 +1,8 @@
 # Lab CEH
 
-Lab praktik Certified Ethical Hacker yang jalan penuh di laptop Anda sendiri. Nol server,
-nol VPS, nol tunnel. Satu perintah untuk menyalakan, satu perintah untuk mematikan.
+Lab praktik Certified Ethical Hacker yang jalan penuh di laptop Anda sendiri. Nol server, nol VPS, nol tunnel. Satu perintah untuk menyalakan, satu perintah untuk mematikan.
 
-Repo ini materi ajar yang dikembangkan sendiri oleh **Evan Hendra**, dipakai untuk kelas CEH
-di Course-Net Kebon Jeruk, 10 sampai 14 Agustus 2026. Isinya lab tambahan yang menemani
-kelas, bukan slide resmi kelasnya. Slide dan judul materi milik Course-Net dan tidak ada
-di repo ini.
+Repo ini materi ajar yang dikembangkan sendiri oleh **Evan Hendra**, dipakai untuk kelas CEH. Isinya lab tambahan yang menemani kelas, bukan slide resmi kelasnya. Slide dan judul materi milik Course-Net dan tidak ada di repo ini.
 
 Repo ini publik dan boleh dipakai ulang oleh pengajar lain. Lihat bagian Lisensi.
 
@@ -14,14 +10,11 @@ Repo ini publik dan boleh dipakai ulang oleh pengajar lain. Lihat bagian Lisensi
 
 ## Tiga langkah
 
-Kerjakan berurutan. Kalau Anda buka halaman ini Minggu malam, tiga langkah ini cukup untuk
-membuat laptop Anda siap dipakai Senin pagi. Perkiraan waktu 30 sampai 45 menit, sebagian
-besarnya menunggu unduhan.
+Kerjakan berurutan. Kalau Anda buka halaman untuk persiapan kelas, tiga langkah ini cukup untuk membuat laptop Anda siap dipakai di kelas pada pagi hari. Perkiraan waktu 30 sampai 45 menit, sebagian besarnya menunggu unduhan.
 
 ### Langkah 1. Pasang Docker
 
-Pilih panduan sesuai sistem operasi Anda. Jangan lompat, tiap panduan sudah dipangkas
-sependek mungkin.
+Pilih panduan sesuai sistem operasi Anda. Jangan lompat, tiap panduan sudah dipangkas sependek mungkin.
 
 | Sistem operasi | Panduan |
 |---|---|
@@ -38,8 +31,7 @@ git clone https://github.com/muff1nmigi/ceh-lab.git
 cd ceh-lab
 ```
 
-Kalau Anda mengunduh ZIP dari tombol Code di GitHub, buka folder hasil ekstraknya, lalu
-di macOS atau Linux jalankan `chmod +x lab` satu kali.
+Kalau Anda mengunduh ZIP dari tombol Code di GitHub, buka folder hasil ekstraknya, lalu di macOS atau Linux jalankan `chmod +x lab` satu kali.
 
 Sekarang jalankan pemeriksa kesiapan:
 
@@ -48,9 +40,7 @@ Sekarang jalankan pemeriksa kesiapan:
 .\lab.cmd doctor      # Windows
 ```
 
-Perintah ini memeriksa Docker, arsitektur laptop, RAM, sisa disk, kemampuan menjalankan
-container Intel, dan koneksi ke registry. Yang Anda kejar adalah baris terakhir
-`SEMUA HIJAU`. Kalau ada baris merah, betulkan dulu sesuai sarannya.
+Perintah ini memeriksa Docker, arsitektur laptop, RAM, sisa disk, kemampuan menjalankan container Intel, dan koneksi ke registry. Yang Anda kejar adalah baris terakhir `SEMUA HIJAU`. Kalau ada baris merah, betulkan dulu sesuai sarannya.
 
 Kalau ada baris kuning yang tidak hilang, kirim laporannya ke instruktur:
 
@@ -59,24 +49,20 @@ Kalau ada baris kuning yang tidak hilang, kirim laporannya ke instruktur:
 .\lab.cmd doctor --report      # Windows
 ```
 
-Perintah itu menulis berkas `laporan-siap-<nama-laptop>.txt` di folder repo. Kirim berkas
-itu, bukan tangkapan layar.
+Perintah itu menulis berkas `laporan-siap-<nama-laptop>.txt` di folder repo. Kirim berkas itu, bukan tangkapan layar.
 
 ### Langkah 3. Bangun terminal penyerang, sekali saja
 
-Terminal penyerang tidak ditarik dari internet, tetapi dibangun di laptop Anda sendiri.
-Ini yang membuat lab tetap jalan walau jaringan kelas sedang padat.
+Terminal penyerang tidak ditarik dari internet, tetapi dibangun di laptop Anda sendiri. Ini yang membuat lab tetap jalan walau jaringan kelas sedang padat.
 
 ```
 ./lab build           # macOS dan Linux
 .\lab.cmd build       # Windows
 ```
 
-Jalankan ini **di rumah, bukan di kelas**. Terukur di laptop Apple Silicon: sekitar
-**225 detik** dan **1,16 GB** ruang disk. Di laptop Intel atau AMD kira-kira sama.
+Jalankan ini **di rumah, bukan di kelas**. Terukur di laptop Apple Silicon: sekitar **225 detik** dan **1,16 GB** ruang disk. Di laptop Intel atau AMD kira-kira sama.
 
-Selama prosesnya Anda akan melihat banyak baris pemasangan paket. Itu wajar. Yang Anda
-tunggu satu baris di akhir:
+Selama prosesnya Anda akan melihat banyak baris pemasangan paket. Itu wajar. Yang Anda tunggu satu baris di akhir:
 
 ```
 OK   Toolbox siap. Tag: ceh-toolbox:1.0
@@ -96,17 +82,13 @@ Buka <http://localhost:8000> di browser. Kalau halamannya menampilkan tulisan
 ./lab down 00a
 ```
 
-Kalau langkah ini berhenti dengan pesan `toomanyrequests`, itu batas penarikan Docker Hub
-dan obatnya ada di [docs/04-kalau-macet.md](docs/04-kalau-macet.md).
+Kalau langkah ini berhenti dengan pesan `toomanyrequests`, itu batas penarikan Docker Hub dan obatnya ada di [docs/04-kalau-macet.md](docs/04-kalau-macet.md).
 
 ---
 
 ## Sebelum hari Senin, kerjakan di rumah
 
-Di kelas, semua laptop keluar lewat satu alamat IP publik yang sama. Docker Hub membatasi
-penarikan image ke 100 per jam per alamat IP untuk pengguna yang tidak login. Sepuluh
-laptop yang menarik image barengan menghabiskan jatah itu dalam hitungan menit, dan kelas
-berhenti.
+Di kelas, semua laptop keluar lewat satu alamat IP publik yang sama. Docker Hub membatasi penarikan image ke 100 per jam per alamat IP untuk pengguna yang tidak login. Sepuluh laptop yang menarik image barengan menghabiskan jatah itu dalam hitungan menit, dan kelas berhenti.
 
 Jadi tarik image di rumah, dengan internet Anda sendiri:
 
@@ -144,21 +126,15 @@ Daftar lengkapnya keluar kalau Anda menjalankan `./lab` tanpa argumen.
 
 ## Aturan main, ini bukan basa-basi
 
-Container lab di laptop Anda **bisa menjangkau jaringan kelas**. Itu sudah diuji, bukan
-dugaan. Artinya satu perintah pemindaian yang salah arah bukan latihan lagi, tapi
-pemindaian sungguhan terhadap jaringan Course-Net dan laptop peserta lain.
+Container lab di laptop Anda **bisa menjangkau jaringan kelas**. Itu sudah diuji, bukan dugaan. Artinya satu perintah pemindaian yang salah arah bukan latihan lagi, tapi pemindaian sungguhan terhadap jaringan kelas dan laptop peserta lain.
 
 Tiga aturan, tidak ada pengecualian:
 
-1. Sasaran Anda hanya container di dalam lab yang sedang Anda nyalakan. Panggil dengan
-   nama layanannya, misalnya `juiceshop`, bukan dengan alamat IP hasil pemindaian.
-2. Jangan pernah mengarahkan perintah apa pun ke `192.168.x.x`, ke gateway kelas, ke
-   laptop teman, atau ke alamat internet mana pun.
-3. Kalau Anda tidak yakin sebuah perintah menyasar ke mana, tanya instruktur sebelum
-   menekan Enter, bukan sesudah.
+1. Sasaran Anda hanya container di dalam lab yang sedang Anda nyalakan. Panggil dengan nama layanannya, misalnya `juiceshop`, bukan dengan alamat IP hasil pemindaian.
+2. Jangan pernah mengarahkan perintah apa pun ke `192.168.x.x`, ke gateway kelas, ke laptop teman, atau ke alamat internet mana pun.
+3. Kalau Anda tidak yakin sebuah perintah menyasar ke mana, tanya instruktur sebelum menekan Enter, bukan sesudah.
 
-Teknik di repo ini legal dipakai di lab ini dan ilegal dipakai di sistem yang bukan milik
-Anda dan tanpa izin tertulis. Bawa pulang tekniknya, bukan kebiasaannya.
+Teknik di repo ini legal dipakai di lab ini dan ilegal dipakai di sistem yang bukan milik Anda dan tanpa izin tertulis. Bawa pulang tekniknya, bukan kebiasaannya.
 
 ---
 
@@ -194,8 +170,7 @@ Jadwal lima harinya ada di [jadwal.md](jadwal.md).
 | Hak admin di laptop | Wajib | - |
 | Arsitektur | Intel, AMD, atau ARM, semuanya didukung | - |
 
-Laptop kantor yang dikunci kebijakan perusahaan sering gagal memasang Docker Desktop.
-Kalau bisa memilih, pakai laptop pribadi.
+Laptop kantor yang dikunci kebijakan perusahaan sering gagal memasang Docker Desktop. Kalau bisa memilih, pakai laptop pribadi.
 
 ---
 
