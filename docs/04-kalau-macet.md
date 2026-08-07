@@ -452,7 +452,7 @@ Ambil ulang repo dengan git, bukan dengan mengunduh ZIP dan bukan dengan menyali
 editor teks:
 
 ```
-git clone <alamat repo ini>
+git clone https://github.com/muff1nmigi/ceh-lab.git
 ```
 
 Kalau Anda pernah menyetel `core.autocrlf` menjadi `true`, kembalikan dulu sebelum clone
