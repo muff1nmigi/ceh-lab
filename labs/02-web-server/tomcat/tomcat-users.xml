@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Berkas ini SENGAJA salah. Isinya persis pola yang bikin server Tomcat
+  diambil alih di dunia nyata:
+
+    1. Akun manager tetap memakai nama bawaan, yaitu tomcat.
+    2. Sandinya pendek dan ada di daftar tebakan mana pun.
+    3. Satu akun yang sama memegang manager-gui dan manager-script sekaligus,
+       jadi siapa pun yang menebaknya langsung bisa mengunggah aplikasi.
+
+  Di server yang benar, berkas ini nol akun, dan panel manager tidak pernah
+  bisa dijangkau dari jaringan.
+-->
+<tomcat-users xmlns="http://tomcat.apache.org/xml"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://tomcat.apache.org/xml tomcat-users.xsd"
+              version="1.0">
+
+  <role rolename="manager-gui"/>
+  <role rolename="manager-script"/>
+
+  <user username="tomcat" password="s3cret" roles="manager-gui,manager-script"/>
+
+</tomcat-users>

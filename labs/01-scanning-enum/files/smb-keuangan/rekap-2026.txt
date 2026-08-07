@@ -1,0 +1,6 @@
+Berkas ini hanya boleh dibaca oleh akun budi.
+
+Kalau Anda bisa membaca isi berkas ini lewat sesi anonim, berarti ada yang
+salah dengan konfigurasi share keuangan.
+
+Kode temuan untuk latihan: SMB-KEUANGAN-3390

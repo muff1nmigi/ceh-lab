@@ -1,0 +1,6 @@
+Folder tamu server arsip.
+
+Akses tamu dibuka sementara selama pemindahan berkas antar divisi. Setelah
+semua divisi selesai, akses ini akan ditutup kembali.
+
+Kode temuan untuk latihan: FTP-ANON-5562

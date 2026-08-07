@@ -1,0 +1,15 @@
+backup
+admin
+manager
+server-status
+server-info
+uploads
+arsip-lama
+config
+cgi-bin
+docs
+examples
+host-manager
+test
+tmp
+private

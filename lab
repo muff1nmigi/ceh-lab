@@ -1,0 +1,403 @@
+#!/usr/bin/env bash
+# Launcher lab CEH. Satu perintah buat semua lab, semua arsitektur.
+#   ./lab doctor          cek laptop lo siap apa belum
+#   ./lab list            daftar lab
+#   ./lab up 05          nyalain lab 05
+#   ./lab sh 05          masuk ke terminal penyerang
+#   ./lab down 05        matiin
+set -uo pipefail
+. "$(cd "$(dirname "$0")" && pwd)/scripts/common.sh"
+
+VERSION="1.0.0"
+
+usage() {
+  cat <<'EOF'
+Pemakaian:  ./lab <perintah> [ID lab]
+
+  doctor              Cek laptop lo siap apa belum. JALANIN INI DULUAN.
+  doctor --report     Sama, tapi hasilnya ditulis ke berkas buat dikirim ke instruktur.
+  build               Bikin image toolbox di laptop lo. SEKALI DOANG, di rumah.
+  list                Daftar semua lab, dikelompokin per modul CEH.
+  info   <id>         Keterangan satu lab: URL, kredensial, durasi.
+  up     <id>         Nyalain lab.
+  up     <id> --x86   Nyalain plus layanan bonus yang cuma jalan di laptop Intel/AMD.
+  sh     <id>         Masuk ke terminal penyerang (toolbox) di dalam lab.
+  logs   <id>         Lihat log semua layanan lab.
+  down   <id>         Matiin lab, data lab dibuang.
+  reset  <id>         Matiin lalu nyalain lagi dari nol. Buat kalau lab-nya kacau.
+  pull   <id|core|all>  Tarik image duluan biar hari-H ga nunggu.
+  nuke                Matiin SEMUA lab yang lagi nyala.
+  offline load <dir>  Muat image dari flashdisk (kalau internet mati).
+  new    <id> <slug>  (instruktur) Bikin kerangka lab baru.
+  version
+
+Contoh: ./lab doctor && ./lab build && ./lab pull core
+EOF
+}
+
+# ---------------------------------------------------------------------------
+# Catatan portabilitas: macOS masih ngirim bash 3.2 (2007). Skrip ini WAJIB
+# jalan di situ, jadi nol associative array, nol ${v,,}, dan nol blok "case"
+# di dalam $( ). Yang terakhir itu beneran syntax error di bash 3.2.
+# ---------------------------------------------------------------------------
+DOCTOR_WARN=0
+
+cmd_doctor() {
+  REPORT=""
+  if [ "${1:-}" = "--report" ]; then
+    REPORT="laporan-siap-$(hostname 2>/dev/null | tr -cd '[:alnum:]-').txt"
+    : > "$REPORT"
+  fi
+
+  title "CEK KESIAPAN LAB CEH"
+  info "waktu   : $(date '+%Y-%m-%d %H:%M:%S %Z')"
+  info "sistem  : $(uname -s) $(uname -m)"
+  info "shell   : bash ${BASH_VERSION:-?}"
+
+  if ! command -v docker >/dev/null 2>&1; then
+    bad "Docker belum terpasang."
+    info "Windows : docs/01-pasang-docker-windows.md"
+    info "macOS   : docs/02-pasang-docker-macos.md"
+    doctor_finish 1
+    return 1
+  fi
+  ok "Docker terpasang, versi $(docker version --format '{{.Client.Version}}' 2>/dev/null)"
+
+  if ! docker info >/dev/null 2>&1; then
+    bad "Engine Docker mati. Buka aplikasi Docker Desktop, tunggu ikonnya ijo, ulangi perintah ini."
+    doctor_finish 1
+    return 1
+  fi
+  ok "Engine Docker jalan"
+
+  detect_engine
+  detect_compose
+  ok "docker compose ada, versi $(docker compose version --short 2>/dev/null)"
+
+  if [ "$ARCH" = "arm64" ]; then
+    ok "Arsitektur terdeteksi: arm64 (Apple Silicon atau Windows ARM). Tidak perlu diapa-apakan."
+  elif [ "$ARCH" = "amd64" ]; then
+    ok "Arsitektur terdeteksi: amd64 (Intel atau AMD). Tidak perlu diapa-apakan."
+  else
+    bad "Arsitektur '$ENGINE_ARCH_RAW' tidak dikenal. Kirim keluaran ini ke instruktur."
+    doctor_finish 1
+    return 1
+  fi
+
+  RAM_GB="$(human_gb "${ENGINE_MEM_BYTES:-0}")"
+  if awk -v r="$RAM_GB" -v m="$MIN_RAM_GB" 'BEGIN{exit !(r+0 >= m)}'; then
+    ok "RAM buat Docker: ${RAM_GB} GB, CPU: ${ENGINE_CPUS}"
+  else
+    warn "RAM buat Docker cuma ${RAM_GB} GB, saran minimal ${MIN_RAM_GB} GB."
+    info "Naikin di Docker Desktop: Settings, Resources, Memory."
+    DOCTOR_WARN=1
+  fi
+
+  info "Menguji container amd64, mohon tunggu sebentar."
+  probe_amd64
+  if [ "$EMU_OK" = "1" ] && [ "$ARCH" = "arm64" ]; then
+    ok "Emulasi amd64 jalan. Lab yang hanya punya versi Intel tetap bisa dijalankan, hanya lebih lambat."
+  elif [ "$EMU_OK" = "1" ]; then
+    ok "Container amd64 jalan native"
+  elif [ "$EMU_OK" = "2" ]; then
+    warn "Emulasi tidak bisa diuji karena image ujinya gagal ditarik, kemungkinan kena batas tarikan registry."
+    info "Coba lagi 10 menit lagi, atau lanjut aja, ini bukan penghalang."
+    DOCTOR_WARN=1
+  else
+    warn "Emulasi amd64 tidak jalan di laptop ini."
+    info "Docker Desktop: Settings, General, centang 'Use Rosetta for x86_64/amd64 emulation'."
+    info "Sebagian besar lab tetap jalan. Lapor ke instruktur biar dicatat."
+    DOCTOR_WARN=1
+  fi
+
+  FREE_GB="$(df -Pg . 2>/dev/null | awk 'NR==2{print $4}')"
+  if [ -z "$FREE_GB" ]; then
+    FREE_GB="$(df -Pk . 2>/dev/null | awk 'NR==2{printf "%d", $4/1048576}')"
+  fi
+  if [ -n "$FREE_GB" ] && [ "$FREE_GB" -lt "$MIN_DISK_GB" ] 2>/dev/null; then
+    warn "Sisa disk cuma ${FREE_GB} GB. Semua lab butuh sekitar ${MIN_DISK_GB} GB. Kosongin dulu."
+    DOCTOR_WARN=1
+  else
+    ok "Sisa disk: ${FREE_GB:-tidak terbaca} GB"
+  fi
+
+  if probe_image_ok; then
+    ok "Bisa menarik image dari internet"
+  else
+    warn "Tidak bisa menarik image dari internet."
+    info "Cek koneksi, atau pakai jalur offline: ./lab offline load <folder flashdisk>"
+    DOCTOR_WARN=1
+  fi
+
+  if toolbox_ready; then
+    ok "Image toolbox sudah ada: $TOOLBOX_IMAGE"
+  else
+    warn "Image toolbox '$TOOLBOX_IMAGE' belum dibangun."
+    info "Jalankan: ./lab build   Sekali saja, dan kerjakan di rumah, bukan di kelas."
+    DOCTOR_WARN=1
+  fi
+
+  doctor_finish 0
+}
+
+# ---------------------------------------------------------------------------
+cmd_build() {
+  detect_engine; detect_compose
+  [ -f "$REPO_ROOT/toolbox/Dockerfile" ] || die "toolbox/Dockerfile tidak ada di repo ini. Ambil ulang reponya."
+  title "Bikin image toolbox: $TOOLBOX_IMAGE"
+  info "Ini sekali saja. Terukur sekitar 225 detik dan 1,16 GB disk."
+  info "Lakuin di rumah, jangan di kelas."
+  # Kalau toolbox punya skrip build sendiri, itu yang dipakai. Dua jalur build
+  # yang beda bakal pelan-pelan berbeda isinya, dan yang ketahuan belakangan
+  # cuma di depan kelas.
+  if [ -f "$REPO_ROOT/toolbox/build.sh" ]; then
+    if bash "$REPO_ROOT/toolbox/build.sh" "$@"; then
+      ok "Toolbox siap. Lanjut: ./lab pull core"
+      return 0
+    fi
+    bad "Build toolbox gagal. Layar di atas itu yang dibaca instruktur."
+    exit 1
+  fi
+  if ! docker build --pull -t "$TOOLBOX_IMAGE" "$REPO_ROOT/toolbox"; then
+    bad "Build toolbox gagal. Layar di atas itu yang dibaca instruktur."
+    info "Penyebab paling sering: koneksi putus di tengah, atau disk penuh."
+    exit 1
+  fi
+  ok "Toolbox siap. Lanjut: ./lab pull core"
+}
+
+doctor_finish() {
+  printf '\n'
+  if [ "$1" != "0" ]; then
+    bad "Berhenti di sini. Betulin yang merah di atas dulu."
+  elif [ "$DOCTOR_WARN" = "0" ]; then
+    ok "SEMUA HIJAU. Lanjut: ./lab pull core"
+  else
+    warn "Ada catatan kuning. Kirim laporan ini ke instruktur sebelum hari-H."
+  fi
+  if [ -n "${REPORT:-}" ]; then
+    printf '\nLaporan ada di berkas: %s\nKirim berkas itu ke instruktur.\n' "$REPORT"
+  fi
+}
+
+# ---------------------------------------------------------------------------
+cmd_list() {
+  local last=""
+  printf '\n%sDAFTAR LAB%s   (nyalakan: ./lab up <id>)\n\n' "$C_B" "$C_0"
+  for d in "$LABS_DIR"/*/; do
+    d="${d%/}"
+    local base; base="$(basename "$d")"
+    [ "$base" = "_template" ] && continue
+    [ -f "$d/meta.env" ] || continue
+    local id modul judul durasi level
+    id="$(meta_get "$d/meta.env" ID)"
+    modul="$(meta_get "$d/meta.env" MODUL)"
+    judul="$(meta_get "$d/meta.env" JUDUL)"
+    durasi="$(meta_get "$d/meta.env" DURASI)"
+    level="$(meta_get "$d/meta.env" LEVEL)"
+    if [ "$modul" != "$last" ]; then
+      printf '\n  %sModul %s  %s%s\n' "$C_B" "$modul" "$(meta_get "$d/meta.env" MODUL_NAMA)" "$C_0"
+      last="$modul"
+    fi
+    printf '    %-6s %-46s %3s menit  lv%s\n' "$id" "$judul" "$durasi" "$level"
+  done
+  printf '\n'
+}
+
+# ---------------------------------------------------------------------------
+cmd_info() {
+  resolve_lab "${1:-}"
+  local judul url kred catatan emu
+  judul="$(meta_get "$LAB_META" JUDUL)"
+  url="$(meta_get "$LAB_META" URL)"
+  kred="$(meta_get "$LAB_META" KREDENSIAL)"
+  catatan="$(meta_get "$LAB_META" CATATAN)"
+  emu="$(count_emulated)"
+  title "Lab $LAB_ID  $judul"
+  printf '       modul CEH  : %s %s\n' "$(meta_get "$LAB_META" MODUL)" "$(meta_get "$LAB_META" MODUL_NAMA)"
+  printf '       durasi     : %s menit\n' "$(meta_get "$LAB_META" DURASI)"
+  [ -n "$url" ]  && printf '       buka        : %s\n' "$url"
+  [ -n "$kred" ] && printf '       kredensial : %s\n' "$kred"
+  printf '       panduan    : %s/README.md\n' "${LAB_DIR#"$REPO_ROOT"/}"
+  if [ "${LAB_INTERNET:-0}" = "1" ]; then
+    printf '       internet   : NYALA buat lab ini, rute ke jaringan lokal tetap diblokir\n'
+  else
+    printf '       internet   : mati, lab ini terkurung di jaringannya sendiri\n'
+  fi
+  [ -n "$catatan" ] && printf '       catatan    : %s\n' "$catatan"
+  if [ "$emu" -gt 0 ] 2>/dev/null; then
+    detect_engine
+    if [ "$ARCH" = "arm64" ]; then
+      printf '\n'
+      warn "$emu layanan di lab ini hanya punya versi Intel, jadi berjalan lewat emulasi. Menyalakannya lebih lama, dan itu normal."
+    fi
+  fi
+  printf '\n'
+}
+
+# ---------------------------------------------------------------------------
+cmd_up() {
+  local id="${1:-}"; shift || true
+  local profiles=""
+  for a in "$@"; do
+    case "$a" in
+      --x86)   profiles="${profiles:+$profiles,}x86" ;;
+      --bonus) profiles="${profiles:+$profiles,}bonus" ;;
+      *) die "Opsi '$a' tidak dikenal." ;;
+    esac
+  done
+  detect_engine; detect_compose; resolve_lab "$id"
+
+  if ! toolbox_ready; then
+    bad "Image toolbox '$TOOLBOX_IMAGE' belum ada di laptop ini."
+    info "Bangun dulu, sekali saja: ./lab build"
+    info "Sengaja tidak dijalankan otomatis di sini, karena prosesnya beberapa menit dan"
+    info "itu bukan hal yang enak ditunggu saat kelas sedang berjalan."
+    exit 1
+  fi
+
+  if printf '%s' "$profiles" | grep -q x86 && [ "$ARCH" != "amd64" ]; then
+    die "Opsi --x86 hanya untuk laptop Intel atau AMD. Laptop ini arm64, jalankan tanpa opsi itu: ./lab up $LAB_ID"
+  fi
+
+  local emu; emu="$(count_emulated)"
+  if [ "$emu" -gt 0 ] 2>/dev/null && [ "$ARCH" = "arm64" ]; then
+    probe_amd64
+    if [ "$EMU_OK" = "0" ]; then
+      die "Lab ini butuh container amd64 dan laptop ini belum bisa emulasi. Jalankan ./lab doctor, lalu ikuti sarannya."
+    fi
+    warn "$emu layanan jalan lewat emulasi. Nyalainnya bisa 1-3 menit, sabar."
+  fi
+
+  title "Nyalain lab $LAB_ID"
+  if [ "${LAB_INTERNET:-0}" = "1" ]; then
+    warn "LAB INI TERHUBUNG KE INTERNET. Cuma lab ini, dan cuma selama nyala."
+    info "Rute ke jaringan lokal diblokir dari dalam toolbox, tapi tetap:"
+    info "arahkan perintah hanya ke target yang disebut di README lab ini."
+  fi
+  local waitflag="--wait --wait-timeout 240"
+  [ "$(meta_get "$LAB_META" WAIT)" = "0" ] && waitflag=""
+
+  # shellcheck disable=SC2086
+  if ! COMPOSE_PROFILES="$profiles" dc up -d --quiet-pull $waitflag; then
+    bad "Ada layanan yang gagal nyala. Log 40 baris terakhir:"
+    dc logs --tail 40
+    info "Coba: ./lab reset $LAB_ID"
+    info "Masih gagal, panggil instruktur dan tunjukin layar ini."
+    exit 1
+  fi
+
+  local url; url="$(meta_get "$LAB_META" URL)"
+  printf '\n'
+  ok "Lab $LAB_ID nyala."
+  [ -n "$url" ] && info "buka di browser  : $url"
+  info "terminal penyerang: ./lab sh $LAB_ID"
+  info "panduan langkahnya: ${LAB_DIR#"$REPO_ROOT"/}/README.md"
+  info "kalau sudah selesai: ./lab down $LAB_ID"
+  printf '\n'
+}
+
+cmd_down() {
+  detect_engine; resolve_lab "${1:-}"
+  dc down -v --remove-orphans >/dev/null 2>&1
+  ok "Lab $LAB_ID dimatikan."
+}
+
+cmd_reset() {
+  detect_engine; resolve_lab "${1:-}"
+  title "Reset lab $LAB_ID"
+  dc down -v --remove-orphans >/dev/null 2>&1
+  shift || true
+  cmd_up "$LAB_ID" "$@"
+}
+
+cmd_sh() {
+  detect_engine; resolve_lab "${1:-}"
+  local svc="${2:-toolbox}"
+  dc exec "$svc" bash 2>/dev/null || dc exec "$svc" sh
+}
+
+cmd_logs() { detect_engine; resolve_lab "${1:-}"; dc logs -f --tail 100; }
+
+cmd_pull() {
+  detect_engine; detect_compose
+  local what="${1:-core}"
+  case "$what" in
+    all|core)
+      local n=0
+      for d in "$LABS_DIR"/*/; do
+        d="${d%/}"; [ "$(basename "$d")" = "_template" ] && continue
+        [ -f "$d/meta.env" ] || continue
+        if [ "$what" = "core" ] && [ "$(meta_get "$d/meta.env" TIER)" != "core" ]; then continue; fi
+        resolve_lab "$(meta_get "$d/meta.env" ID)"
+        printf '  tarik %s %s\n' "$LAB_ID" "$(meta_get "$LAB_META" JUDUL)"
+        # --ignore-buildable bikin toolbox dilewat, karena toolbox dibangun
+        # lokal dan ga pernah ada di registry mana pun. Compose lama ga punya
+        # flag itu, jadi fallback-nya --ignore-pull-failures supaya satu
+        # kegagalan toolbox ga bikin seluruh tarikan lab batal.
+        dc pull --quiet --ignore-buildable 2>/dev/null || dc pull --quiet --ignore-pull-failures
+        n=$((n+1))
+      done
+      ok "$n lab siap dipakai tanpa internet."
+      ;;
+    *)
+      resolve_lab "$what"
+      dc pull --ignore-buildable 2>/dev/null || dc pull --ignore-pull-failures
+      ok "Image lab $LAB_ID sudah ada di laptop ini."
+      ;;
+  esac
+}
+
+cmd_nuke() {
+  detect_engine
+  local n=0
+  for d in "$LABS_DIR"/*/; do
+    d="${d%/}"
+    # _template WAJIB dilewat. ID-nya masih "__ID__", dan resolve_lab bakal
+    # exit 1 di situ, jadi versi lama bikin "./lab nuke" mati sebelum matiin
+    # satu lab pun.
+    [ "$(basename "$d")" = "_template" ] && continue
+    [ -f "$d/meta.env" ] || continue
+    local id; id="$(meta_get "$d/meta.env" ID)"
+    resolve_lab "$id"
+    dc down -v --remove-orphans >/dev/null 2>&1 && n=$((n+1))
+  done
+  ok "Beres. $n lab dimatikan."
+}
+
+cmd_offline() {
+  case "${1:-}" in
+    load)  bash "$REPO_ROOT/scripts/bundle-load.sh" "${2:-}" ;;
+    build) bash "$REPO_ROOT/scripts/bundle-build.sh" "${2:-}" ;;
+    *) die "Pakai: ./lab offline load <folder-flashdisk>" ;;
+  esac
+}
+
+cmd_new() { bash "$REPO_ROOT/scripts/new-lab.sh" "$@"; }
+
+# ---------------------------------------------------------------------------
+case "${1:-}" in
+  doctor)
+    shift
+    if [ "${1:-}" = "--report" ]; then
+      NO_COLOR=1 cmd_doctor --report 2>&1 | tee "laporan-siap-$(hostname 2>/dev/null | tr -cd '[:alnum:]-').txt"
+    else
+      cmd_doctor "$@"
+    fi
+    ;;
+  build)   shift; cmd_build "$@" ;;
+  list|ls) cmd_list ;;
+  info)    shift; cmd_info "$@" ;;
+  up)      shift; cmd_up "$@" ;;
+  down)    shift; cmd_down "$@" ;;
+  reset)   shift; cmd_reset "$@" ;;
+  sh|shell)shift; cmd_sh "$@" ;;
+  logs)    shift; cmd_logs "$@" ;;
+  pull)    shift; cmd_pull "$@" ;;
+  nuke)    cmd_nuke ;;
+  offline) shift; cmd_offline "$@" ;;
+  new)     shift; cmd_new "$@" ;;
+  version) printf 'lab %s\n' "$VERSION" ;;
+  ''|-h|--help|help) usage ;;
+  *) bad "Perintah '$1' tidak ada."; usage; exit 1 ;;
+esac

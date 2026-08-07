@@ -1,0 +1,6 @@
+# Berkas ini bukan pengaman. Isinya justru memberi tahu penyerang persis
+# folder mana yang menurut pemiliknya tidak boleh dilihat orang.
+User-agent: *
+Disallow: /backup/
+Disallow: /server-status
+Disallow: /arsip-lama/

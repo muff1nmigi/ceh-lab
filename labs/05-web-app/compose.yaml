@@ -1,0 +1,114 @@
+# Lab 05 - Meretas aplikasi web.
+#
+# Tiga service, dua di antaranya punya halaman yang dibuka di browser:
+#
+#   dvwa       jalur WAJIB. Semua langkah bernomor di README jalan di sini.
+#   dvwa-db    database DVWA. Sengaja TIDAK mem-publish port apa pun, jadi
+#              dia cuma bisa dijangkau dari dalam jaringan lab. Peserta yang
+#              mau melihat isi tabelnya harus lewat SQL Injection, dan itu
+#              memang latihannya.
+#   juiceshop  jalur TANTANGAN buat yang sudah selesai duluan.
+#
+# Kenapa mysql:8 dan bukan mysql:5.7: mysql:5.7 cuma punya varian amd64, dan
+# di laptop Apple Silicon dia jalan lewat emulasi yang terukur 2.1 kali lebih
+# lambat. Daftarnya ada di _shared/amd64-only.txt.
+#
+# Kenapa ghcr.io/digininja/dvwa dan bukan vulnerables/web-dvwa: alasan yang
+# sama persis, vulnerables/web-dvwa amd64-only. Tag d45ba3c dipin karena
+# dia digest yang sama dengan "latest" pada 2026-08-06, dan hari-H bukan
+# waktunya kejutan dari tag yang bergeser.
+#
+# Nol image amd64-only di lab ini, jadi nol profile bonus. Itu keputusan
+# sadar: semua yang ada di sini jalan native di arm64 maupun x86.
+services:
+  dvwa:
+    image: ghcr.io/digininja/dvwa:d45ba3c
+    # Aplikasi ini memang sengaja rapuh. Diikat ke 127.0.0.1 supaya cuma
+    # laptop yang menjalankannya yang bisa membuka, bukan satu jaringan
+    # kantor Course-Net.
+    networks: [default, edge]
+    ports:
+      - "127.0.0.1:8500:80"
+    environment:
+      # Nama service dipakai sebagai nama host, bukan localhost. Setiap
+      # container punya localhost sendiri.
+      DB_SERVER: dvwa-db
+      DB_DATABASE: dvwa
+      DB_USER: dvwa
+      DB_PASSWORD: p@ssw0rd
+      DB_PORT: "3306"
+      # Bawaan DVWA itu "impossible", dan di level itu semua latihan di
+      # README ini gagal. Disetel ke "low" supaya peserta mulai dari yang
+      # jalan, lalu menaikkannya sendiri di langkah lanjutan.
+      DEFAULT_SECURITY_LEVEL: low
+    # TAMBALAN SATU BARIS, DAN INI BUKAN GAYA-GAYAAN.
+    # Skrip setup bawaan DVWA memakai "ALTER TABLE ... ADD COLUMN IF NOT
+    # EXISTS", dan itu sintaks khas MariaDB. MySQL 8 menolaknya di tingkat
+    # parser. Diuji di sini pada 2026-08-06 dengan mysql:8 (8.4.11):
+    # setup.php berhenti dengan "Fatal error: Uncaught mysqli_sql_exception:
+    # You have an error in your SQL syntax ... near 'IF NOT EXISTS role'",
+    # dan tabel guestbook tidak pernah dibuat, jadi latihan stored XSS mati.
+    # Ada dua kemunculan, baris 67 dan 145 di dvwa/includes/DBMS/MySQL.php.
+    #
+    # Kenapa tidak pindah ke MariaDB saja: aturan repo ini bilang image wajib
+    # datang dari daftar multiarch yang sudah diverifikasi, dan MariaDB tidak
+    # ada di daftar itu. Kenapa aman: setup.php menjalankan "DROP DATABASE IF
+    # EXISTS" duluan, jadi kolomnya memang selalu belum ada dan "IF NOT
+    # EXISTS" tidak pernah dibutuhkan. Peserta boleh menekan "Create / Reset
+    # Database" berkali-kali.
+    command:
+      - sh
+      - -c
+      - sed -i 's/ADD COLUMN IF NOT EXISTS/ADD COLUMN/g' /var/www/html/dvwa/includes/DBMS/MySQL.php && exec apache2-foreground
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://127.0.0.1/login.php"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    depends_on:
+      dvwa-db:
+        condition: service_healthy
+
+  dvwa-db:
+    image: mysql:8
+    # Sengaja tanpa "ports:" dan tanpa "edge". Database ini tidak boleh
+    # bisa dibuka dari host, karena separuh nilai latihan SQL Injection
+    # hilang kalau peserta bisa langsung mysql -h localhost.
+    environment:
+      MYSQL_ROOT_PASSWORD: akar-lab-ceh
+      MYSQL_DATABASE: dvwa
+      MYSQL_USER: dvwa
+      MYSQL_PASSWORD: p@ssw0rd
+    # Tanpa healthcheck, DVWA nyala duluan dan setup.php menjawab error
+    # koneksi yang bikin peserta mengira lab-nya rusak.
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-pakar-lab-ceh"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  juiceshop:
+    image: bkimminich/juice-shop:v19.0.0
+    networks: [default, edge]
+    ports:
+      - "127.0.0.1:8501:3000"
+    environment:
+      NODE_ENV: unsafe
+    # Juice Shop butuh sekitar 40 detik sebelum mau menjawab, dan tanpa
+    # healthcheck "./lab up" sudah bilang "nyala" jauh sebelum itu. Peserta
+    # lalu membuka http://localhost:8501 dan melihat halaman kosong, lalu
+    # menyimpulkan lab-nya rusak. Image ini tidak punya shell sama sekali
+    # (diuji: "exec sh" gagal dengan "executable file not found"), jadi
+    # bentuk CMD-SHELL tidak bisa dipakai. Yang dipakai node bawaan image.
+    healthcheck:
+      test:
+        - CMD
+        - /nodejs/bin/node
+        - -e
+        - require('http').get('http://127.0.0.1:3000/rest/admin/application-version',function(r){process.exit(r.statusCode===200?0:1)}).on('error',function(){process.exit(1)})
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 30s

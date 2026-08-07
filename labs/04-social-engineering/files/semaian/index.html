@@ -1,0 +1,77 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Login Tirtabite Conect</title>
+<!--
+  Halaman umpan versi KASAR. Ini titik awal lab, bukan hasil akhir.
+  Dibuat sengaja penuh indikator supaya peserta bisa mendaftarnya satu per satu,
+  lalu membandingkannya dengan hasil kloning di Langkah 4.
+  Merek Tirtabyte fiktif. Jangan pernah menyalin pola ini untuk sasaran nyata.
+-->
+<style>
+  body {
+    background: #ffe9a8;
+    font-family: "Comic Sans MS", "Times New Roman", serif;
+    color: #202020;
+    margin: 0;
+    padding: 24px;
+  }
+  .kotak {
+    width: 420px;
+    max-width: 92vw;
+    margin: 24px auto;
+    background: #ffffff;
+    border: 3px dashed #c0392b;
+    padding: 20px;
+  }
+  h1 { color: #c0392b; font-size: 26px; margin: 0 0 6px; }
+  .alarm {
+    background: #c0392b;
+    color: #ffffff;
+    font-weight: bold;
+    padding: 10px;
+    margin: 0 0 16px;
+  }
+  label { display: block; margin: 12px 0 4px; font-size: 14px; }
+  input { width: 100%; padding: 7px; font-size: 14px; }
+  button {
+    margin-top: 16px;
+    padding: 10px 18px;
+    font-size: 15px;
+    background: #27ae60;
+    color: #ffffff;
+    border: 0;
+    cursor: pointer;
+  }
+  .tanda { margin-top: 18px; font-size: 11px; color: #777777; }
+</style>
+</head>
+<body>
+  <div class="kotak">
+    <p class="alarm">PERINGATAN PENTING!!! Akun anda akan di nonaktifkan dalam
+    24 jam. Segera verifikasi sekarang juga.</p>
+
+    <h1>Tirtabite Conect</h1>
+    <p>Selmat datang di portal karyawan. Silahkan masukan data anda di bawah ini
+    untuk memverifikasi akun anda supaya tidak di blokir oleh sistem kami.</p>
+
+    <form method="post" action="/cgi-bin/masuk.cgi">
+      <label for="pengguna">User name</label>
+      <input id="pengguna" name="pengguna" type="text">
+
+      <label for="sandi">Pasword</label>
+      <input id="sandi" name="sandi" type="password">
+
+      <label for="telepon">Nomor HP (wajib untuk verifikasi)</label>
+      <input id="telepon" name="telepon" type="text">
+
+      <button type="submit">VERIFIKASI SEKARANG</button>
+    </form>
+
+    <p class="tanda">Lab CEH Course-Net. Tirtabyte adalah merek fiktif dan domain
+    tirtabyte.example tidak dapat didaftarkan. Jangan pernah mengetik kata sandi
+    sungguhan di halaman mana pun di dalam lab ini.</p>
+  </div>
+</body>
+</html>

@@ -1,0 +1,13 @@
+tomcat
+admin
+manager
+password
+changeme
+123456
+root
+tomcat123
+s3cret
+Password123
+admin123
+qwerty
+letmein

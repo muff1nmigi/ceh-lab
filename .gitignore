@@ -1,0 +1,38 @@
+laporan-siap-*.txt
+.DS_Store
+*.bak
+# Hasil kerja peserta. Lab nyuruh nulis keluaran ke /lab, dan /lab itu folder
+# lab ini di laptop peserta, jadi berkasnya nongol di repo.
+labs/*/bukti-*.txt
+# Keluaran "nmap -oA" punya peserta. Lab 01 tantangan 4 memang menyuruh
+# menulisnya ke /lab, dan /lab itu folder lab di laptop peserta.
+labs/*/hasil-scan.*
+labs/*/*.gnmap
+labs/*/*.nmap
+# Berkas besar ga masuk git. Tempatnya GitHub Releases, dicatat di assets.lock,
+# ditarik sama scripts/fetch-assets.sh. Batasnya 1 MB, dijaga CI.
+labs/*/files/*.apk
+labs/*/files/*.cap
+labs/*/files/*.dmp
+labs/*/files/*.bin
+labs/*/files/*.zip
+labs/*/files/*.vhd*
+
+# Python bikin ini di dalam folder lab waktu skrip serangan dijalankan dari
+# dalam container. Isinya hasil kompilasi, bukan sumber.
+__pycache__/
+
+# Artefak yang LAHIR dari peserta mengerjakan lab. Bind mount /lab bikin berkas
+# yang dibuat di dalam container nongol di folder repo. Webshell PHP yang
+# ke-commit ke repo publik itu backdoor kanonik, dan Defender di laptop peserta
+# bakal mengarantina seluruh folder repo.
+labs/*/shell.php
+labs/*/*.war
+labs/*/jejak/
+# Catatan sengaja: labs/02-web-server/webshell/index.jsp TIDAK diabaikan.
+# Berkas itu bahan ajar yang ditulis sendiri, dibaca peserta sebelum dipakai,
+# dan memang harus ikut ke repo. Jangan tambahkan pola *.jsp yang menyapunya.
+
+# Lahir otomatis dari hook SessionStart. Mewarisi kelas data folder induknya,
+# dan tidak pernah ikut ke repo publik.
+memory/

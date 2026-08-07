@@ -1,0 +1,102 @@
+# Lab 04 - Social engineering. Dua server web dan nol egress.
+#
+#   portal  http://localhost:8400   portal karyawan Tirtabyte yang SAH
+#   phish   http://localhost:8401   halaman umpan, tempat peserta bekerja
+#
+# Tirtabyte adalah merek FIKTIF dan seluruh domain di lab ini memakai TLD
+# .example yang dicadangkan RFC 2606, jadi tidak pernah bisa didaftarkan
+# siapa pun. Itu batas etika lab ini, dan ditegakkan di berkas ini lewat
+# nama alias jaringan di bawah, bukan cuma di README.
+#
+# Dua-duanya httpd:2.4 yang sudah diverifikasi multiarch, jadi jalan native
+# di Apple Silicon maupun Intel. Nol image amd64-only, nol profile bonus.
+#
+# Kenapa httpd:2.4 perlu disetel lewat "command":
+# modul CGI di image resmi httpd dikirim dalam keadaan MATI. Barisnya ada di
+# conf/httpd.conf tapi dikomentari, jadi tanpa satu sed di bawah ini setiap
+# permintaan ke /cgi-bin/masuk.cgi balik sebagai unduhan berkas teks, bukan
+# program yang dijalankan. Ini diuji, bukan diduga.
+services:
+
+  # ---------------------------------------------------------------------
+  # Portal SAH. Ini pembanding, dan ini juga yang dikloning peserta.
+  # ---------------------------------------------------------------------
+  portal:
+    image: httpd:2.4
+    hostname: portal
+    container_name: ceh-04-portal
+    command:
+      - /bin/sh
+      - -c
+      - |
+        sed -i 's|#LoadModule cgid_module|LoadModule cgid_module|' /usr/local/apache2/conf/httpd.conf
+        exec httpd-foreground
+    volumes:
+      - ./files/portal:/usr/local/apache2/htdocs:ro
+      - ./files/cgi-portal:/usr/local/apache2/cgi-bin:ro
+    networks:
+      default:
+        aliases:
+          # Nama inilah yang dipakai di surat 02 dan yang harus dibandingkan
+          # peserta dengan alias container phish di bawah.
+          - portal.tirtabyte.example
+      edge: {}
+    ports:
+      - "127.0.0.1:8400:80"
+
+  # ---------------------------------------------------------------------
+  # Halaman umpan. htdocs-nya volume, BUKAN bind mount ke repo, supaya
+  # peserta bisa menimpa index.html sesuka hati tanpa mengotori repo dan
+  # tanpa perlu tahu git. "./lab down 04" membuang volumenya, jadi lab ini
+  # selalu kembali ke titik nol.
+  # ---------------------------------------------------------------------
+  phish:
+    image: httpd:2.4
+    hostname: phish
+    container_name: ceh-04-phish
+    command:
+      - /bin/sh
+      - -c
+      - |
+        sed -i 's|#LoadModule cgid_module|LoadModule cgid_module|' /usr/local/apache2/conf/httpd.conf
+        if [ ! -f /usr/local/apache2/htdocs/.tersemai ]; then
+          cp /semaian/index.html /usr/local/apache2/htdocs/index.html
+          rm -f /usr/local/apache2/htdocs/index.html.en
+          touch /usr/local/apache2/htdocs/.tersemai
+        fi
+        mkdir -p /tangkapan
+        chmod 1777 /tangkapan
+        if [ ! -f /tangkapan/kredensial.log ]; then
+          : > /tangkapan/kredensial.log
+        fi
+        chmod 666 /tangkapan/kredensial.log
+        exec httpd-foreground
+    volumes:
+      - situs-phish:/usr/local/apache2/htdocs
+      - tangkapan:/tangkapan
+      - ./files/cgi:/usr/local/apache2/cgi-bin:ro
+      - ./files/semaian:/semaian:ro
+    networks:
+      default:
+        aliases:
+          # Domain mirip. Ini yang muncul di atribut href surat 01, jadi
+          # tautan di surat itu benar-benar sampai ke halaman umpan kalau
+          # dipanggil dari dalam toolbox.
+          - portal-tirtabyte.masuk-aman.example
+      edge: {}
+    ports:
+      - "127.0.0.1:8401:80"
+
+  # ---------------------------------------------------------------------
+  # Toolbox datang dari _shared/compose.base.yaml. Di sini cuma ditambah
+  # dua volume, supaya peserta bisa menulis halaman umpan dan membaca hasil
+  # panen dari satu terminal yang sama.
+  # ---------------------------------------------------------------------
+  toolbox:
+    volumes:
+      - situs-phish:/phish
+      - tangkapan:/tangkapan
+
+volumes:
+  situs-phish:
+  tangkapan:

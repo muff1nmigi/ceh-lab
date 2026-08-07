@@ -1,0 +1,86 @@
+# Lab 02, Hacking Web Server.
+#
+# Dua target, dua permukaan serang yang beda:
+#
+#   tomcat   Apache Tomcat 9 dengan panel manager terbuka dan akun bawaan
+#            yang sandinya lemah. Ini jalur "ambil alih server lewat fitur
+#            administrasi yang memang disediakan vendor".
+#   httpd    Apache httpd 2.4 dengan salah konfigurasi klasik: banner versi
+#            dibuka, direktori tanpa berkas indeks jadi daftar isi, berkas
+#            cadangan ikut terlayani, dan halaman server-status dibuka umum.
+#
+# Dua-duanya multiarch, jadi jalan native di Apple Silicon maupun x86. Nol
+# emulasi, nol profil bonus di lab ini.
+#
+# Port dari blok 8200 sampai 8299:
+#   8200 -> tomcat  (container 8080)
+#   8201 -> httpd   (container 80)
+#
+# Folder ./jejak di-mount ke dua target sebagai tempat log. Folder yang sama
+# ikut terbaca dari toolbox di /lab/jejak, karena toolbox mem-mount folder lab
+# ini ke /lab. Itu yang bikin langkah "baca log" bisa dikerjakan dengan cat
+# biasa, tanpa peserta perlu tahu perintah docker exec.
+services:
+  tomcat:
+    image: tomcat:9.0
+    hostname: tomcat
+    # Image resmi Tomcat 9 mengosongkan webapps/ dan menyimpan aplikasi
+    # bawaannya di webapps.dist/. Tanpa penyalinan di bawah, /manager/html
+    # menjawab 404 dan lab ini tidak punya isi.
+    #
+    # Perintah kedua dan ketiga mengganti META-INF/context.xml milik manager
+    # dan host-manager. Isi aslinya memasang RemoteAddrValve yang cuma
+    # mengizinkan 127.0.0.1, jadi panelnya akan menjawab 403 untuk semua
+    # permintaan dari container lain. Salah konfigurasi ini yang sedang
+    # dilatih: panel administrasi yang dibuka ke jaringan, bukan dikunci ke
+    # mesin lokal.
+    #
+    # Perintah keempat MEMATIKAN kunci akun bawaan Tomcat, dan ini keputusan
+    # yang perlu dibaca sebelum diubah. server.xml bawaan membungkus
+    # UserDatabaseRealm dengan LockOutRealm, yang mengunci sebuah akun setelah
+    # 5 kegagalan dan menolak sandi yang benar sekalipun selama 300 detik.
+    # Diukur di mesin uji pada 2026-08-06: hydra dengan 52 tebakan menabrak
+    # kunci itu pada tebakan keenam, lalu melaporkan "0 valid password found"
+    # walaupun sandi yang benar ada di dalam daftarnya. Catatan yang muncul di
+    # log Tomcat adalah "An attempt was made to authenticate the locked user".
+    #
+    # CombinedRealm adalah kelas induk LockOutRealm, jadi penggantian ini
+    # membuang penguncian tanpa mengubah cara kredensial dibaca. Peserta
+    # tetap diberi tahu bahwa kunci akun itu ada dan merupakan countermeasure
+    # resmi, penjelasannya ada di README lab ini.
+    command:
+      - sh
+      - -c
+      - |
+        cp -rn /usr/local/tomcat/webapps.dist/. /usr/local/tomcat/webapps/
+        printf '%s\n' '<Context antiResourceLocking="false" privileged="true" />' > /usr/local/tomcat/webapps/manager/META-INF/context.xml
+        printf '%s\n' '<Context antiResourceLocking="false" privileged="true" />' > /usr/local/tomcat/webapps/host-manager/META-INF/context.xml
+        sed -i 's/realm\.LockOutRealm/realm.CombinedRealm/' /usr/local/tomcat/conf/server.xml
+        exec catalina.sh run
+    volumes:
+      - ./tomcat/tomcat-users.xml:/usr/local/tomcat/conf/tomcat-users.xml:ro
+      - ./jejak:/usr/local/tomcat/logs
+    networks: [default, edge]
+    ports:
+      - "127.0.0.1:8200:8080"
+
+  httpd:
+    image: httpd:2.4
+    hostname: web01
+    # Berkas conf/extra/httpd-lab.conf berisi seluruh salah konfigurasi lab
+    # ini. Barisnya ditambahkan ke httpd.conf saat start, dan pengecekan grep
+    # membuatnya aman diulang kalau container di-restart.
+    command:
+      - sh
+      - -c
+      - |
+        mkdir -p /var/log/lab
+        grep -q httpd-lab.conf conf/httpd.conf || echo 'Include conf/extra/httpd-lab.conf' >> conf/httpd.conf
+        exec httpd-foreground
+    volumes:
+      - ./httpd/httpd-lab.conf:/usr/local/apache2/conf/extra/httpd-lab.conf:ro
+      - ./httpd/htdocs:/usr/local/apache2/htdocs:ro
+      - ./jejak:/var/log/lab
+    networks: [default, edge]
+    ports:
+      - "127.0.0.1:8201:80"

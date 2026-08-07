@@ -1,0 +1,118 @@
+# Potongan yang di-stack ke SETIAP lab oleh ./lab. Jangan dijalankan sendiri.
+# Isinya cuma yang sama di semua lab: terminal penyerang dan pagar jaringan.
+#
+# ===========================================================================
+# PAGAR JARINGAN. Baca ini dulu sebelum mengubah apa pun di berkas ini.
+# ===========================================================================
+# Container di macOS dan Windows TEMBUS ke LAN tempat laptop peserta nyantol.
+# Diukur di mesin uji pada 2026-08-06: dari container di network bawaan
+# Docker, ping ke gateway LAN 192.168.18.1 berhasil. Artinya satu perintah
+# "nmap 192.168.18.0/24" yang diketik peserta adalah scan BENERAN ke jaringan
+# kantor tempat kelas berlangsung. Peringatan berbentuk paragraf di README
+# tidak pernah menang lawan peserta yang sedang semangat, jadi pagarnya
+# ditaruh di sini, di lapisan yang tidak bisa dilewati tanpa sengaja.
+#
+# Cara kerjanya, dua network:
+#
+#   default   internal: true. Semua service yang tidak menyebut network apa
+#             pun otomatis masuk ke sini. Tidak ada default route sama sekali,
+#             jadi paket ke luar mati di tabel rute, bukan di firewall.
+#             Terbukti pada 2026-08-06: ping 8.8.8.8 dan ping 192.168.18.1
+#             dua-duanya balik "Network is unreachable". Bahkan dengan
+#             NET_ADMIN dan default route yang ditambah tangan, paketnya
+#             tetap didrop engine. Toolbox HANYA nempel di sini.
+#
+#   edge      Cuma buat satu hal: bikin "ports:" jalan. Docker menolak
+#             mem-publish port kalau SEMUA network container itu internal
+#             (diuji 2026-08-06: curl ke port yang dipublish balik HTTP 000
+#             dan "docker port" kosong). Jadi service yang punya URL untuk
+#             dibuka di browser wajib nempel di "default" DAN "edge".
+#             Masquerade dimatikan di network ini, jadi target tetap tidak
+#             bisa keluar ke LAN atau internet (diuji: TCP ke 1.1.1.1:443 dan
+#             ke 192.168.18.1:80 dua-duanya timeout).
+#
+# Lab yang butuh internet beneran: JANGAN sentuh berkas ini. Baca
+# _shared/compose.internet.yaml.
+#
+# Yang DILARANG dipakai di compose lab, dan dijaga CI: "network_mode",
+# "privileged: true", dan mendefinisikan ulang network "default".
+# Ketiganya membatalkan seluruh pagar di atas.
+
+services:
+  toolbox:
+    # Toolbox DI-BUILD di laptop peserta, bukan ditarik dari registry.
+    # Alasannya menghapus tiga mode gagal sekaligus: image yang tidak pernah
+    # ada di registry, paket GHCR yang default-nya private, dan batas 100
+    # tarikan per jam per IP di Docker Hub yang pasti kena kalau satu kelas
+    # menarik bersamaan. Peserta menjalankan "./lab build" satu kali di rumah.
+    # Variabel TOOLBOX_IMAGE tetap ada supaya instruktur bisa menunjuk image
+    # lain saat menguji, tapi defaultnya yang lokal.
+    image: ${TOOLBOX_IMAGE:-ceh-toolbox:1.0}
+    build:
+      context: ${REPO_ROOT}/toolbox
+      dockerfile: Dockerfile
+    container_name: ${COMPOSE_PROJECT_NAME:-ceh}-toolbox
+    hostname: penyerang
+    init: true
+    command: ["tail", "-f", "/dev/null"]
+    working_dir: /lab
+    volumes:
+      # project-directory dipaksa ke folder lab oleh ./lab, jadi ./ = folder
+      # lab ini.
+      - ./:/lab
+      - ${REPO_ROOT}/_shared/wordlists:/wordlists:ro
+      - toolbox-home:/root
+    cap_add:
+      # NET_RAW saja, dan ini bukan pilihan gaya.
+      # Tanpa NET_RAW, "nmap -sS" diam-diam turun jadi TCP connect scan dan
+      # peserta tidak sadar dia mengerjakan scan yang berbeda dari yang
+      # diajarkan. Diuji 2026-08-06: dengan NET_RAW saja plus seccomp bawaan,
+      # "nmap -sS -sU -O" jalan normal.
+      #
+      # NET_ADMIN SENGAJA TIDAK ADA DI SINI. Yang butuh cuma segelintir lab
+      # (ARP spoofing yang menyalakan promiscuous mode, mitmproxy transparan,
+      # bettercap), dan lab itu menambahkan sendiri di compose.yaml-nya:
+      #
+      #   services:
+      #     toolbox:
+      #       cap_add: ["NET_ADMIN"]
+      #
+      # Compose menggabung daftar cap_add antar berkas, jadi hasilnya
+      # NET_RAW plus NET_ADMIN (diverifikasi lewat "docker compose config").
+      # Catatan jujur: pagar isolasi di atas TIDAK bergantung pada absennya
+      # NET_ADMIN, sudah diuji dan tetap tertahan. NET_ADMIN dibuang karena
+      # alasan lain: dia mengizinkan peserta mengacak interface dan iptables
+      # di dalam container, dan lab yang rusak karena itu susah didiagnosis
+      # di tengah kelas.
+      - NET_RAW
+    # seccomp=unconfined SENGAJA TIDAK DIPAKAI.
+    # Profil seccomp bawaan Docker memblokir sekitar 44 syscall, termasuk
+    # yang dipakai untuk keluar dari container. Yang dicek adalah apa yang
+    # sebenarnya butuh dimatikan, dan jawabannya nol untuk jalur wajib:
+    # 2026-08-06 di Kali arm64 dengan seccomp bawaan, bash, apt, dan
+    # nmap -sS -sU -O semuanya jalan. Kalau nanti ada satu lab yang beneran
+    # butuh, lab itu yang menambahkan security_opt sendiri plus alasannya di
+    # README lab, bukan semua lab yang dilemahkan sejak awal.
+    tty: true
+    stdin_open: true
+    networks:
+      # Toolbox cuma di sini. Ini yang bikin "nmap ke subnet kelas" mati.
+      - default
+
+networks:
+  default:
+    internal: true
+  edge:
+    # Dideklarasikan di sini, tapi cuma dipakai service yang mem-publish port.
+    # Compose tidak membuat network yang tidak dipakai, jadi lab tanpa port
+    # yang dipublish tetap bersih.
+    driver: bridge
+    driver_opts:
+      # Tanpa masquerade, paket dari container ke LAN keluar dengan alamat
+      # asal subnet container dan tidak pernah ada jalan pulang. Efeknya
+      # target tetap tidak bisa menjangkau jaringan kelas, sementara jalur
+      # port yang dipublish (host ke container) tetap hidup.
+      com.docker.network.bridge.enable_ip_masquerade: "false"
+
+volumes:
+  toolbox-home:

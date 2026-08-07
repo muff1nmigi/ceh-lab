@@ -1,0 +1,44 @@
+# Image yang TIDAK punya varian arm64. Diverifikasi 2026-08-06 lewat API
+# hub.docker.com dan registry GHCR, 45 image dicek, 28 multiarch, 17 di bawah
+# ini cuma amd64.
+#
+# Aturannya: nol image dari daftar ini di JALUR WAJIB. Jalur wajib itu service
+# yang nyala tanpa profile, yaitu yang dipakai semua peserta di jam kelas.
+# Di laptop Apple Silicon image ini jalan lewat emulasi dan terukur 2.1 kali
+# lebih lambat, jadi separuh kelas akan tertinggal tanpa tahu kenapa.
+#
+# Boleh dipakai sebagai BONUS, dengan dua syarat sekaligus:
+#   profiles: ["bonus"]  atau  profiles: ["x86"]
+#   platform: linux/amd64
+#
+# Gerbangnya ada di scripts/check-compose.sh dan jalan di CI.
+# Baris kosong dan baris yang diawali # diabaikan.
+
+vulnerables/web-dvwa
+citizenstig/nowasp
+webpwnized/mutillidae
+acgpiano/sqli-labs
+raesene/bwapp
+polinux/snmpd
+tleemcjr/metasploitable2
+vulnerables/cve-2014-6271
+vulhub/heartbleed
+vulhub/samba
+vulhub/tomcat
+vulhub/struts2
+vulhub/redis
+phocean/john_the_ripper_jumbo
+mysql:5.7
+honeynet/conpot
+
+# Penggantinya, supaya ga perlu nyari lagi:
+#   vulnerables/web-dvwa  -> ghcr.io/digininja/dvwa
+#   mysql:5.7             -> mysql:8
+#   honeynet/conpot       -> oitc/modbus-server
+#
+# Image berikut TIDAK PERNAH ADA sama sekali. Jangan pernah diketik:
+#   sqlmapproject/sqlmap
+#   vulhub/s2-045
+#   wpscanteam/vulnerablewordpress
+#   owasp/zap2docker-stable   (pensiun, pakai zaproxy/zap-stable)
+#   ghcr.io/muffinmigi/ceh-toolbox   (ga pernah dibikin, toolbox dibangun lokal)

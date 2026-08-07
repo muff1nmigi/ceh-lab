@@ -1,0 +1,48 @@
+Return-Path: <no-reply@tirtabyte.example>
+Delivered-To: rina.wulandari@tirtabyte.example
+Received: from mx-in-01.tirtabyte.example (localhost [127.0.0.1])
+	by mx-in-01.tirtabyte.example (Postfix) with ESMTP id 4Xj8pR1kLmz2Vt7
+	for <rina.wulandari@tirtabyte.example>; Fri, 07 Aug 2026 09:02:18 +0700 (WIB)
+Received: from smtp-out-02.tirtabyte.example (smtp-out-02.tirtabyte.example [192.0.2.24])
+	by mx-in-01.tirtabyte.example (Postfix) with ESMTPS id 4Xj8pR0hJcz2Vt3
+	(TLS1.3 ECDHE-RSA-AES256-GCM-SHA384)
+	for <rina.wulandari@tirtabyte.example>; Fri, 07 Aug 2026 09:02:16 +0700 (WIB)
+Authentication-Results: mx-in-01.tirtabyte.example;
+	spf=pass (mx-in-01.tirtabyte.example: domain of tirtabyte.example designates
+	 192.0.2.24 as permitted sender) smtp.mailfrom=tirtabyte.example;
+	dkim=pass header.d=tirtabyte.example header.s=selector1 header.b=Qm4TzP1x;
+	dmarc=pass (p=none dis=none) header.from=tirtabyte.example
+Received-SPF: pass (mx-in-01.tirtabyte.example: domain of tirtabyte.example
+	designates 192.0.2.24 as permitted sender)
+	client-ip=192.0.2.24; envelope-from=no-reply@tirtabyte.example
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=tirtabyte.example;
+	s=selector1; t=1786158136; bh=Kk1oVn8bQ2c9wTt0Yl3sRz6Hm4Pd7Xa5Ub2Ig0Ej1Fw=;
+	h=From:To:Subject:Date; b=Qm4TzP1xN7aBcD9eFgHiJkLmNoPqRsTuVwXyZ0123456789
+	 aBcDeFgHiJkLmNoPqRsTuVwXyZ9876543210AbCdEfGhIjKlMnOpQrStUvWxYz=
+Message-ID: <20260807090216.4Xj8pR0hJcz2Vt3@smtp-out-02.tirtabyte.example>
+Date: Fri, 07 Aug 2026 09:02:16 +0700
+From: "Tirtabyte IT Operations" <no-reply@tirtabyte.example>
+To: "Rina Wulandari" <rina.wulandari@tirtabyte.example>
+Subject: Pemeliharaan terjadwal Tirtabyte Connect, Sabtu 15 Agustus 2026
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+Halo Rina,
+
+Kami memberitahukan bahwa Tirtabyte Connect akan menjalani pemeliharaan
+terjadwal pada Sabtu, 15 Agustus 2026, pukul 22:00 sampai 23:30 WIB.
+
+Selama jendela tersebut portal tidak dapat diakses. Tidak ada tindakan yang
+perlu Anda lakukan, dan tidak ada data yang terpengaruh.
+
+Kalau Anda perlu bantuan, buka tiket lewat Service Desk di jaringan internal.
+Tim IT tidak pernah meminta kata sandi Anda lewat surel, telepon, maupun
+aplikasi pesan.
+
+Salam,
+Tim IT Operations
+PT Tirtabyte Nusantara
+
+Artefak latihan lab CEH Course-Net. Tirtabyte merek fiktif, seluruh domain
+memakai TLD .example yang dicadangkan RFC 2606.

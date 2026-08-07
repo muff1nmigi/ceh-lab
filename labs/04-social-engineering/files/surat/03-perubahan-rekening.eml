@@ -1,0 +1,53 @@
+Return-Path: <finance@tirtabyte-nusantara.example>
+Delivered-To: rina.wulandari@tirtabyte.example
+Received: from mx-in-01.tirtabyte.example (localhost [127.0.0.1])
+	by mx-in-01.tirtabyte.example (Postfix) with ESMTP id 4Xm5wQ8pTdz4Rn2
+	for <rina.wulandari@tirtabyte.example>; Tue, 11 Aug 2026 10:41:07 +0700 (WIB)
+Received: from smtp.tirtabyte-nusantara.example (smtp.tirtabyte-nusantara.example [203.0.113.90])
+	by mx-in-01.tirtabyte.example (Postfix) with ESMTPS id 4Xm5wQ6nSbz4Rn0
+	(TLS1.3 ECDHE-RSA-AES256-GCM-SHA384)
+	for <rina.wulandari@tirtabyte.example>; Tue, 11 Aug 2026 10:41:05 +0700 (WIB)
+Authentication-Results: mx-in-01.tirtabyte.example;
+	spf=pass (mx-in-01.tirtabyte.example: domain of tirtabyte-nusantara.example
+	 designates 203.0.113.90 as permitted sender)
+	 smtp.mailfrom=tirtabyte-nusantara.example;
+	dkim=pass header.d=tirtabyte-nusantara.example header.s=default
+	 header.b=Rr7YuI2p;
+	dmarc=pass (p=reject dis=none) header.from=tirtabyte-nusantara.example
+Received-SPF: pass (mx-in-01.tirtabyte.example: domain of
+	tirtabyte-nusantara.example designates 203.0.113.90 as permitted sender)
+	client-ip=203.0.113.90; envelope-from=finance@tirtabyte-nusantara.example
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=tirtabyte-nusantara.example; s=default; t=1786419665;
+	bh=Zz9pQr4Nm2Kv7Bt1Cx8Ly0Ha3Jd6Sf5Wg2Ue4Ro1Ti=; h=From:To:Subject:Date;
+	b=Rr7YuI2pMn3OpQrStUvWxYz0123456789AbCdEfGhIjKlMnOpQrStUvWxYz987654
+	 3210aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789AbCdEfGhIjKlMnOpQrStUvWx=
+Message-ID: <20260811034105.4Xm5wQ6nSbz4Rn0@smtp.tirtabyte-nusantara.example>
+Date: Tue, 11 Aug 2026 10:41:05 +0700
+From: "Rina Wulandari" <finance@tirtabyte-nusantara.example>
+Reply-To: "Rina Wulandari" <finance@tirtabyte-nusantara.example>
+To: "Bagian Pembayaran" <pembayaran@tirtabyte.example>
+Subject: Re: Pembayaran invoice INV-2026-0731, perubahan rekening
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+X-Priority: 1 (Highest)
+
+Selamat pagi,
+
+Menyambung pembicaraan kemarin, rekening operasional kami sedang dalam proses
+audit sehingga pembayaran invoice INV-2026-0731 mohon dialihkan ke rekening
+pengganti yang saya kirim terpisah.
+
+Karena jatuh tempo besok, mohon diproses hari ini juga dan konfirmasinya
+cukup dibalas ke email ini saja. Saya sedang di luar kantor dan sulit
+dihubungi lewat telepon.
+
+Terima kasih atas kerja samanya.
+
+Rina Wulandari
+Bagian Keuangan
+
+Artefak latihan lab CEH Course-Net. Tirtabyte merek fiktif, seluruh domain
+memakai TLD .example yang dicadangkan RFC 2606. Tidak ada nomor rekening
+sungguhan di berkas ini, dan memang tidak akan pernah ada.

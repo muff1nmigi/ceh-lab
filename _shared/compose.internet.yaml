@@ -1,0 +1,63 @@
+# Potongan TAMBAHAN, cuma buat lab yang beneran butuh internet.
+# Sampai hari ini yang masuk kategori itu cuma lab OSINT, karena bahan
+# latihannya memang data publik di luar sana.
+#
+# ===========================================================================
+# CARA MENYALAKANNYA. Sengaja butuh DUA langkah sadar, bukan satu.
+# ===========================================================================
+# 1. Di labs/<lab>/meta.env, tulis:  INTERNET=1
+#    Hanya itu yang bikin ./lab menumpuk berkas ini. Kalau nilainya bukan 1,
+#    berkas ini tidak pernah ikut, dan network "internet" tidak pernah ada.
+#
+# 2. Di README lab itu, tulis alasannya di bawah judul persis:
+#       ## Kenapa lab ini butuh internet
+#    CI menolak lab dengan INTERNET=1 yang tidak punya bagian itu.
+#
+# Kalau langkah 1 dilupakan tapi compose lab menyebut network "internet",
+# compose berhenti dengan "undefined network". Itu memang yang diinginkan:
+# gagal berisik lebih baik daripada diam-diam kebuka.
+#
+# ===========================================================================
+# INTERNET DIBUKA, JARINGAN KELAS TETAP DITUTUP.
+# ===========================================================================
+# Kasih toolbox jalan ke internet berarti default route-nya hidup lagi, dan
+# LAN kelas ada di ujung route yang sama. Jadi begitu masuk, rute ke semua
+# blok RFC1918 plus link-local dan CGNAT langsung di-blackhole di dalam
+# container. Subnet lab sendiri tetap jalan karena rutenya connected /24 dan
+# selalu lebih spesifik daripada blackhole /8, /12, atau /16.
+#
+# Diuji 2026-08-06 di mesin arm64:
+#   ping 1.1.1.1                  -> jalan
+#   wget http://example.com       -> jalan
+#   ping 192.168.18.1 (LAN kelas) -> "sendto: Invalid argument"
+#   nmap -sn 192.168.18.0/24      -> "failed to determine route", 0 host
+#   nmap -sS -p80 target          -> tetap jalan
+#
+# Pemasangan pagar ini FAIL-CLOSED: kalau "ip route add" gagal (misalnya
+# iproute2 tidak ada di image toolbox, atau NET_ADMIN tidak kepasang),
+# container berhenti dengan pesan jelas, bukan jalan tanpa pagar.
+
+services:
+  toolbox:
+    networks:
+      - default
+      - internet
+    cap_add:
+      # Dibutuhkan buat memasang rute blackhole di atas. Digabung dengan
+      # NET_RAW dari compose.base.yaml oleh compose.
+      - NET_ADMIN
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        gagal() { echo "PAGAR RUTE GAGAL DIPASANG: $$1"; echo "Toolbox dimatikan supaya lab ini tidak jalan tanpa pagar. Lapor ke instruktur."; exit 1; }
+        command -v ip >/dev/null 2>&1 || gagal "perintah 'ip' tidak ada di image toolbox (paket iproute2)"
+        for blok in 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 169.254.0.0/16 100.64.0.0/10; do
+          ip route add blackhole "$$blok" 2>/dev/null || gagal "tidak bisa menambah blackhole $$blok (butuh cap NET_ADMIN)"
+        done
+        echo "Pagar rute terpasang. Internet terbuka, jaringan lokal tertutup:"
+        ip route | grep blackhole
+        exec tail -f /dev/null
+
+networks:
+  internet:
+    driver: bridge

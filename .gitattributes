@@ -1,0 +1,16 @@
+# WAJIB. Tanpa ini, Windows nyimpen skrip bash pakai CRLF dan bash bales
+# "bad interpreter: /usr/bin/env bash^M". Peserta ga bakal bisa nebak itu.
+* text=auto eol=lf
+*.sh    text eol=lf
+lab     text eol=lf
+*.yaml  text eol=lf
+*.yml   text eol=lf
+*.md    text eol=lf
+*.ps1   text eol=crlf
+*.cmd   text eol=crlf
+*.tar   binary
+*.gz    binary
+*.png   binary
+*.apk   binary
+*.cap   binary
+*.dmp   binary

@@ -1,0 +1,107 @@
+# Lab 07 - Denial of service.
+#
+# PAGARNYA PALING TEBAL DI REPO INI, DAN ITU DISENGAJA.
+# Seluruh serangan di lab ini terkurung di network "default" yang internal
+# (lihat _shared/compose.base.yaml). Toolbox tidak punya default route sama
+# sekali, jadi paket ke internet dan ke jaringan kelas mati di tabel rute,
+# bukan di firewall yang bisa diakali. Port kedua target diikat ke 127.0.0.1
+# supaya peserta lain di ruangan yang sama tidak bisa ikut membukanya.
+#
+# Skrip SYN flood di serang/syn-flood.py MEMALSUKAN alamat asal. Alamat palsu
+# yang dipakai selalu diambil dari subnet lab itu sendiri, bukan alamat acak.
+# Alasannya bukan estetika: alamat di subnet yang terhubung langsung membuat
+# balasan SYN-ACK berhenti di ARP yang tidak pernah dijawab, sehingga tidak
+# ada satu paket pun yang punya alasan untuk keluar dari jaringan lab.
+#
+# Dua target, image sama, kolam pekerja sama, isi sama. Yang berbeda cuma
+# setelan pertahanannya. Itu supaya yang terukur adalah mitigasinya, bukan
+# tambahan sumber daya.
+
+services:
+
+  toolbox:
+    environment:
+      # Skrip serangan di lab ini di-import satu sama lain (pagar.py), dan
+      # tanpa baris ini Python menulis folder __pycache__ ke dalam folder lab
+      # peserta lewat bind mount. Yang ketinggalan di repo bukan hasil kerja
+      # peserta, jadi lebih baik tidak pernah dibuat.
+      PYTHONDONTWRITEBYTECODE: "1"
+
+  # -------------------------------------------------------------------------
+  # TARGET 1: rentan. Ini yang diserang lebih dulu.
+  # -------------------------------------------------------------------------
+  web:
+    image: httpd:2.4
+    hostname: web
+    networks: [default, edge]
+    ports:
+      - "127.0.0.1:8710:80"
+    volumes:
+      - ./web-conf:/usr/local/apache2/conf/lab:ro
+      - ./htdocs:/usr/local/apache2/htdocs:ro
+      # Skrip pembaca metrik kernel ikut dipasang di target, karena angka
+      # /proc/net/netstat itu milik kernel target dan tidak bisa dibaca dari
+      # toolbox. Read-only, dan tidak ada satu pun perkakas serangan di sana.
+      - ./serang:/serang:ro
+    sysctls:
+      # SYN cookies DIMATIKAN. Tanpa baris ini, SYN flood sekecil lab tidak
+      # menimbulkan efek apa pun di kernel Linux modern, dan peserta akan
+      # menyimpulkan skripnya rusak.
+      #
+      # Catatan hasil uji, supaya tidak ada yang menghabiskan waktu di tempat
+      # yang salah: yang benar-benar menentukan besar antrean SYN adalah
+      # backlog yang diminta aplikasi lewat listen(), yaitu ListenBacklog di
+      # web-conf/rentan.conf. tcp_max_syn_backlog di bawah ini TIDAK
+      # mengecilkannya lebih jauh di kernel sekarang, dan dibiarkan tertulis
+      # cuma supaya peserta bisa membandingkan nilainya dengan web-aman lewat
+      # serang/kernel-metrik.sh.
+      #
+      # Kedua nilai ini per network namespace, jadi yang berubah cuma
+      # container ini, bukan laptop peserta.
+      net.ipv4.tcp_syncookies: "0"
+      net.ipv4.tcp_max_syn_backlog: "16"
+    # Berkas setelan lab di-Include paling akhir supaya menang atas httpd.conf
+    # bawaan image. grep di depan mencegah baris Include kepasang dua kali
+    # kalau container ini di-restart.
+    # DOS_MODE dipakai di tantangan tambahan: DOS_MODE=aman ./lab reset 07
+    # membuat target ini memakai setelan yang sama dengan web-aman.
+    command:
+      - sh
+      - -c
+      - >-
+        dd if=/dev/zero of=/tmp/laporan.bin bs=1M count=8 2>/dev/null;
+        grep -q "conf/lab/" /usr/local/apache2/conf/httpd.conf ||
+        printf "\nInclude conf/lab/${DOS_MODE:-rentan}.conf\n"
+        >> /usr/local/apache2/conf/httpd.conf;
+        exec httpd-foreground
+
+  # -------------------------------------------------------------------------
+  # TARGET 2: sudah dimitigasi. Pembanding, diserang dengan perintah yang sama.
+  # -------------------------------------------------------------------------
+  web-aman:
+    image: httpd:2.4
+    hostname: web-aman
+    networks: [default, edge]
+    ports:
+      - "127.0.0.1:8711:80"
+    volumes:
+      - ./web-conf:/usr/local/apache2/conf/lab:ro
+      - ./htdocs:/usr/local/apache2/htdocs:ro
+      # Skrip pembaca metrik kernel ikut dipasang di target, karena angka
+      # /proc/net/netstat itu milik kernel target dan tidak bisa dibaca dari
+      # toolbox. Read-only, dan tidak ada satu pun perkakas serangan di sana.
+      - ./serang:/serang:ro
+    sysctls:
+      # SYN cookies dinyalakan. Ini pertahanan bawaan kernel Linux terhadap
+      # SYN flood, dan di lab ini efeknya bisa diukur langsung.
+      net.ipv4.tcp_syncookies: "1"
+      net.ipv4.tcp_max_syn_backlog: "1024"
+    command:
+      - sh
+      - -c
+      - >-
+        dd if=/dev/zero of=/tmp/laporan.bin bs=1M count=8 2>/dev/null;
+        grep -q "conf/lab/" /usr/local/apache2/conf/httpd.conf ||
+        printf "\nInclude conf/lab/aman.conf\n"
+        >> /usr/local/apache2/conf/httpd.conf;
+        exec httpd-foreground

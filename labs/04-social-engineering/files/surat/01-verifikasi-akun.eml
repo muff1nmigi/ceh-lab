@@ -1,0 +1,77 @@
+Return-Path: <bounce-8842@mx3.kirimcepat.example>
+Delivered-To: rina.wulandari@tirtabyte.example
+Received: from mx-in-01.tirtabyte.example (localhost [127.0.0.1])
+	by mx-in-01.tirtabyte.example (Postfix) with ESMTP id 4Xk2vT5nZqz3Qm1
+	for <rina.wulandari@tirtabyte.example>; Mon, 10 Aug 2026 08:14:52 +0700 (WIB)
+Received: from mx3.kirimcepat.example (mx3.kirimcepat.example [203.0.113.47])
+	by mx-in-01.tirtabyte.example (Postfix) with ESMTPS id 4Xk2vT2mNbz3Qk9
+	(TLS1.3 ECDHE-RSA-AES256-GCM-SHA384)
+	for <rina.wulandari@tirtabyte.example>; Mon, 10 Aug 2026 08:14:49 +0700 (WIB)
+Received: from vps-2231.penyewaanmurah.example (vps-2231.penyewaanmurah.example [198.51.100.203])
+	by mx3.kirimcepat.example (Postfix) with ESMTPA id 6Bd91Cf0Aa
+	for <rina.wulandari@tirtabyte.example>; Mon, 10 Aug 2026 01:14:41 +0000 (UTC)
+Authentication-Results: mx-in-01.tirtabyte.example;
+	spf=fail (mx-in-01.tirtabyte.example: domain of kirimcepat.example does not
+	 designate 203.0.113.47 as permitted sender) smtp.mailfrom=kirimcepat.example;
+	dkim=none (message not signed) header.d=none;
+	dmarc=fail (p=none dis=none) header.from=tirtabyte.example
+Received-SPF: fail (mx-in-01.tirtabyte.example: domain of kirimcepat.example
+	does not designate 203.0.113.47 as permitted sender)
+	client-ip=203.0.113.47; envelope-from=bounce-8842@mx3.kirimcepat.example
+X-Originating-IP: [198.51.100.203]
+X-Mailer: PHPMailer 6.8.0 (https://github.com/PHPMailer/PHPMailer)
+Message-ID: <20260810011441.6Bd91Cf0Aa@vps-2231.penyewaanmurah.example>
+Date: Mon, 10 Aug 2026 01:14:41 +0000
+From: "Tirtabyte IT Helpdesk" <it-helpdesk@tirtabyte.example>
+Reply-To: "Verifikasi Akun" <verifikasi.akun.tirtabyte@surelcepat.example>
+To: undisclosed-recipients:;
+Subject: [PENTING] Akun Tirtabyte Connect anda akan di nonaktifkan dalam 24 jam
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="=_batas_9f21a7c4"
+
+--=_batas_9f21a7c4
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+Kepada Yth. Bapak/Ibu Pengguna,
+
+Sistem kami mendeteksi aktifitas tidak wajar pada akun anda. Untuk alasan
+keamanan, akun Tirtabyte Connect anda akan di nonaktifkan secara otomatis
+dalam 24 jam ke depan.
+
+Segera lakukan verifikasi ulang melalui tautan resmi berikut:
+
+https://portal.tirtabyte.example/verifikasi
+
+Apabila anda tidak melakukan verifikasi sampai batas waktu tersebut, seluruh
+data dan akses email anda akan di hapus permanen dari sistem kami dan tidak
+dapat di pulihkan kembali.
+
+Mohon jangan membalas email ini. Untuk pertanyaan silahkan hubungi tim kami
+melalui alamat balasan yang tertera.
+
+Hormat kami,
+Tim IT Helpdesk
+PT Tirtabyte Nusantara
+
+--=_batas_9f21a7c4
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+<html><body style="font-family:Arial,sans-serif;font-size:14px">
+<p>Kepada Yth. Bapak/Ibu Pengguna,</p>
+<p>Sistem kami mendeteksi aktifitas tidak wajar pada akun anda. Untuk alasan
+keamanan, akun Tirtabyte Connect anda akan di nonaktifkan secara otomatis
+dalam <b>24 jam</b> ke depan.</p>
+<p>Segera lakukan verifikasi ulang melalui tautan resmi berikut:</p>
+<p><a href="http://portal-tirtabyte.masuk-aman.example/">https://portal.tirtabyte.example/verifikasi</a></p>
+<p>Apabila anda tidak melakukan verifikasi sampai batas waktu tersebut,
+seluruh data dan akses email anda akan di hapus permanen dari sistem kami
+dan tidak dapat di pulihkan kembali.</p>
+<p>Hormat kami,<br>Tim IT Helpdesk<br>PT Tirtabyte Nusantara</p>
+<p style="font-size:10px;color:#999999">Artefak latihan lab CEH Course-Net.
+Tirtabyte merek fiktif, seluruh domain memakai TLD .example yang dicadangkan
+RFC 2606 dan tidak dapat didaftarkan.</p>
+</body></html>
+
+--=_batas_9f21a7c4--

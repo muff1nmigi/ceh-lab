@@ -1,0 +1,8 @@
+# Log yang lahir waktu lab jalan. Isinya alamat IP container dan jejak
+# perintah peserta, jadi tidak ada gunanya masuk repo publik.
+jejak/*
+!jejak/.gitkeep
+
+# .gitignore di akar repo mengabaikan semua *.bak. Berkas cadangan di bawah
+# ini justru inti lab, jadi dikembalikan di sini.
+!httpd/htdocs/backup/config.php.bak

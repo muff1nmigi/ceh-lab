@@ -1,0 +1,22 @@
+# Penanda buat structure-lint.sh. Dibaca sebagai KEY=value, bukan YAML.
+# Mekanismenya lahir 2026-08-06, alasan lengkapnya di Config/Home/decisions.html (K183).
+#
+# ALASAN itu WAJIB. Penanda tanpa alasan tidak dihormati, dan justru bikin S14 GAGAL.
+# Itu disengaja: pengecualian tanpa alasan tertulis persis anti-pola yang bikin
+# seluruh aturan tata kelola home ini ada.
+
+ALASAN=Repo lab ajar. Isinya SENGAJA meniru sistem nyata yang berantakan, karena berkas yang kelihatan seperti kelalaian itu justru bahan yang dicari peserta. config.php.bak di lab 02 bukan sampah, dia umpan yang nuntun dari enumerasi web server ke kredensial Tomcat, dan README lab itu secara khusus ngajarin kenapa ekstensi .bak yang dipakai (berkas .bak tidak dieksekusi sebagai program, jadi kode sumbernya terkirim apa adanya). Halaman HTML di dalam labs/ juga bukan viewer, itu situs target yang diserang, jadi aturan "tiap viewer ngaku pembangkitnya" tidak berlaku buat mereka.
+
+CEK=S9,S10,DESC
+
+# DESC nutup cek keterangan blueprint (desc-hash.py) buat subpohon ini.
+# Alasannya beda dari dua di atas, jadi ditulis terpisah: repo ini punya README,
+# jadwal, dan panduan sendiri, plus CI yang meriksa isinya. Menyalin keterangan
+# 55 berkas internalnya ke blueprint home itu granularitas yang salah, dan tiap
+# lab baru bakal nambah kewajiban nulis yang ga ada yang baca. Yang blueprint
+# perlu tau cukup satu baris: repo ini apa dan kenapa ada. Itu sudah ditulis di
+# entri Activities/Teaching/Course-Net/ceh-lab.
+
+# Yang TIDAK dikecualikan, dan sengaja: S4 nol secret mentah, S6 nol muatan berat,
+# S12 memory mewarisi kelas data induknya. Tiga itu tetap berlaku penuh di sini,
+# karena repo ini calon repo publik dan justru di situ taruhannya paling besar.

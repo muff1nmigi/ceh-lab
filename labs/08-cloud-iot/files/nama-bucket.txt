@@ -1,0 +1,34 @@
+# Tebakan nama bucket untuk lab 08.
+#
+# Isinya dibentuk dari cara nama bucket S3 beneran dipilih di lapangan:
+# nama perusahaan digabung kata yang menerangkan isinya. Karena nama bucket
+# itu global dan bisa ditebak, daftar sekecil ini sering cukup. Baris yang
+# diawali pagar diabaikan oleh perintah di README.
+#
+# Nusatera Hidro adalah perusahaan fiktif. Nama di bawah tidak menunjuk ke
+# bucket mana pun di AWS sungguhan.
+nusatera
+nusatera-hidro
+nusatera-web
+nusatera-www
+nusatera-static
+nusatera-assets
+nusatera-arsip
+nusatera-arsip-publik
+nusatera-arsip-internal
+nusatera-arsip-privat
+nusatera-backup
+nusatera-cadangan
+nusatera-data
+nusatera-dev
+nusatera-staging
+nusatera-prod
+nusatera-produksi
+nusatera-logs
+nusatera-dokumen
+nusatera-hr
+nusatera-scada
+nusatera-ot
+nusatera-plc
+nusatera-terraform
+nusatera-tfstate

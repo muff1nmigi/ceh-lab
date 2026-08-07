@@ -1,0 +1,104 @@
+{
+"_catatan": [
+  "Peta register PLC palsu untuk lab 08. Dipasang ke /app/modbus_server.json.",
+  "",
+  "PENTING, pergeseran satu alamat. pymodbus memetakan alamat permintaan N ke",
+  "kunci N+1 di berkas ini. Diukur pada 2026-08-06: kunci 1 terbaca di alamat 0,",
+  "kunci 100 terbaca di alamat 99. Jadi semua kunci di bawah sengaja ditulis",
+  "sebagai alamat-yang-didokumentasikan plus satu, supaya angka di README cocok",
+  "dengan angka yang diketik peserta. Kalau menambah register baru, ikuti pola",
+  "yang sama, jangan pakai alamat mentah.",
+  "",
+  "JANGAN menaruh kunci non-angka di dalam coils, discreteInput,",
+  "holdingRegister, atau inputRegister. Server menjalankan int(kunci, 0) pada",
+  "setiap kunci, jadi satu kunci berupa teks membuat container mati saat boot.",
+  "",
+  "Isi register ini fiksi. Nusatera Hidro bukan perusahaan yang ada.",
+  "",
+  "Peta alamat, sesuai yang ditulis di README:",
+  "  coils (FC1 baca, FC5 tulis)   0 pompa intake, 1 pompa dosing,",
+  "                                2 katup bypass, 3 alarm",
+  "  discreteInput (FC2 baca saja) 0 tangki penuh, 1 pompa fault,",
+  "                                2 panel terbuka",
+  "  holdingRegister (FC3, FC6)    0 rpm pompa, 1 dosis klorin x10,",
+  "                                2 batas tekanan kPa, 3 mode auto,",
+  "                                10-17 tag perangkat ASCII,",
+  "                                30-36 catatan integrator ASCII",
+  "  inputRegister (FC4 baca saja) 0 level tangki cm, 1 aliran L/min,",
+  "                                2 tekanan kPa, 3 turbiditas x10"
+],
+"server": {
+  "listenerAddress": "0.0.0.0",
+  "listenerPort": 502,
+  "protocol": "TCP",
+  "tlsParams": {
+    "description": "sengaja mati. Modbus TCP polos memang begitu, dan itu bahan ajarnya",
+    "privateKey": null,
+    "certificate": null
+    },
+  "logging": {
+    "format": "%(asctime)-15s %(levelname)-8s %(message)s",
+    "logLevel": "INFO"
+    }
+  },
+"persistence": {
+  "enabled": false,
+  "file": "/data/modbus_registers.json",
+  "saveInterval": 30
+  },
+"metrics": {
+  "enabled": false,
+  "address": "0.0.0.0",
+  "port": 9090,
+  "path": "/metrics"
+},
+"registers": {
+  "description": "Instalasi pengolahan air fiktif Nusatera Hidro, unit WTP-01A",
+
+  "initializeUndefinedRegisters": true,
+
+  "coils": {
+    "1": true,
+    "2": true,
+    "3": false,
+    "4": false
+    },
+
+  "discreteInput": {
+    "1": false,
+    "2": false,
+    "3": true
+    },
+
+  "holdingRegister": {
+    "1": 1450,
+    "2": 12,
+    "3": 3000,
+    "4": 1,
+
+    "11": "0x4E55",
+    "12": "0x5341",
+    "13": "0x5445",
+    "14": "0x5241",
+    "15": "0x2D57",
+    "16": "0x5450",
+    "17": "0x2D30",
+    "18": "0x3141",
+
+    "31": "0x5356",
+    "32": "0x433A",
+    "33": "0x7469",
+    "34": "0x7274",
+    "35": "0x6132",
+    "36": "0x3031",
+    "37": "0x3920"
+    },
+
+  "inputRegister": {
+    "1": 231,
+    "2": 4870,
+    "3": 2870,
+    "4": 8
+    }
+  }
+}

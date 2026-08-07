@@ -1,0 +1,101 @@
+# Lab 01 - jaringan target kecil buat latihan scanning dan enumeration.
+#
+# Empat target, empat protokol, semuanya native arm64 DAN amd64 jadi tidak ada
+# peserta yang kena emulasi di lab ini.
+#
+# Yang mem-publish port ke host cuma dua: "web" dan "ssh". Keduanya nempel di
+# "default" plus "edge" sesuai aturan di _shared/compose.base.yaml.
+#
+# "smb" dan "ftp" SENGAJA tidak mem-publish port, dan itu keputusan sadar:
+#   - FTP passive memakai port data 21000 sampai 21010. Mem-publish port 21
+#     saja bikin sambungan dari host nyambung lalu menggantung waktu LIST,
+#     dan gejala itu jauh lebih membingungkan daripada tidak ada portnya.
+#   - Port 445 di macOS sering sudah dipegang layanan berbagi berkas bawaan.
+# Dua-duanya tetap dikerjakan penuh dari dalam toolbox, yang memang tempat
+# peserta mengetik. Alasan ini diulang di README bagian batas.
+services:
+
+  # ---------------------------------------------------------------------
+  # WEB. Sumber footprinting: nama pegawai, robots.txt, dan dua folder yang
+  # tidak ditautkan dari halaman depan.
+  # ---------------------------------------------------------------------
+  web:
+    image: httpd:2.4
+    hostname: web-intranet
+    networks: [default, edge]
+    ports:
+      - "127.0.0.1:8180:80"
+    volumes:
+      - ./files/web:/usr/local/apache2/htdocs:ro
+
+  # ---------------------------------------------------------------------
+  # SMB. Sengaja dibiarkan seperti file server kantor yang telat di-patch:
+  # SMBv1 masih hidup dan sesi anonim tidak dibatasi. Dua-duanya temuan yang
+  # keluar di exam, dan dua-duanya yang bikin null session jalan.
+  # ---------------------------------------------------------------------
+  smb:
+    image: servercontainers/samba:a3.24.1-s4.23.8-r0
+    hostname: fs-kantor
+    environment:
+      # mDNS dan WS-Discovery dimatikan. Keduanya tidak dipakai di latihan
+      # dan cuma menambah port yang bikin hasil scan peserta ramai.
+      AVAHI_DISABLE: "1"
+      WSDD2_DISABLE: "1"
+      SAMBA_CONF_LOG_LEVEL: "1"
+      SAMBA_CONF_WORKGROUP: NUSANTARA
+      SAMBA_CONF_SERVER_STRING: File Server Kantor Pusat
+      SAMBA_CONF_MAP_TO_GUEST: Bad User
+      # _SPACE_ jadi spasi, itu format punya image ini.
+      SAMBA_GLOBAL_CONFIG_server_SPACE_min_SPACE_protocol: NT1
+      SAMBA_GLOBAL_CONFIG_client_SPACE_min_SPACE_protocol: NT1
+      SAMBA_GLOBAL_CONFIG_ntlm_SPACE_auth: "yes"
+      SAMBA_GLOBAL_CONFIG_restrict_SPACE_anonymous: "0"
+      SAMBA_GLOBAL_CONFIG_guest_SPACE_account: nobody
+      SAMBA_GLOBAL_CONFIG_usershare_SPACE_allow_SPACE_guests: "yes"
+      # Akun. UID sengaja dipilih supaya RID-nya rapi dan gampang dilacak
+      # waktu latihan RID cycling: RID = UID x 2 + 1000.
+      ACCOUNT_budi: Password123
+      UID_budi: "3001"
+      ACCOUNT_siti: Nusantara2026
+      UID_siti: "3002"
+      ACCOUNT_agus: Agustus17
+      UID_agus: "3003"
+      ACCOUNT_itadmin: Sup3rAdm1n
+      UID_itadmin: "3004"
+      SAMBA_VOLUME_CONFIG_publik: "[publik]; path=/shares/publik; guest ok = yes; read only = yes; browseable = yes; comment = Dokumen umum, boleh dibaca semua orang"
+      SAMBA_VOLUME_CONFIG_keuangan: "[keuangan]; path=/shares/keuangan; guest ok = no; valid users = budi; read only = yes; browseable = yes; comment = Rekap keuangan, terbatas"
+    volumes:
+      - ./files/smb-publik:/shares/publik:ro
+      - ./files/smb-keuangan:/shares/keuangan:ro
+
+  # ---------------------------------------------------------------------
+  # FTP. Anonim sengaja dinyalakan lewat konfigurasi yang di-mount, supaya
+  # NSE ftp-anon punya sesuatu untuk ditemukan.
+  # ---------------------------------------------------------------------
+  ftp:
+    image: delfer/alpine-ftp-server:latest
+    hostname: ftp-arsip
+    environment:
+      USERS: "arsip|Arsip2026 budi|Password123"
+    volumes:
+      - ./files/ftp/vsftpd.conf:/etc/vsftpd/vsftpd.conf:ro
+      - ./files/ftp-anon:/var/lib/ftp:ro
+
+  # ---------------------------------------------------------------------
+  # SSH. Dipublish ke host supaya peserta bisa membuktikan sendiri bahwa
+  # banner grabbing dari luar container memberi hasil yang sama.
+  # ---------------------------------------------------------------------
+  ssh:
+    image: linuxserver/openssh-server:version-10.3_p1-r0
+    hostname: srv-jump
+    networks: [default, edge]
+    ports:
+      - "127.0.0.1:8122:2222"
+    environment:
+      PUID: "1000"
+      PGID: "1000"
+      TZ: Asia/Jakarta
+      USER_NAME: budi
+      USER_PASSWORD: Password123
+      PASSWORD_ACCESS: "true"
+      SUDO_ACCESS: "false"

@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tirtabyte Connect - Masuk</title>
+<!--
+  Halaman portal SAH untuk lab CEH 04.
+  Tirtabyte adalah merek fiktif. Domain tirtabyte.example memakai TLD .example
+  yang dicadangkan RFC 2606 dan tidak pernah bisa didaftarkan siapa pun.
+  Tidak ada satu pun sumber daya eksternal di halaman ini. Semua gaya ditulis
+  inline supaya lab tetap nol egress walaupun browser peserta punya internet.
+-->
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #eef2f6;
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #1d2733;
+  }
+  .kartu {
+    width: 360px;
+    max-width: 92vw;
+    background: #ffffff;
+    border: 1px solid #d7dee7;
+    border-radius: 10px;
+    padding: 32px 28px 22px;
+    box-shadow: 0 8px 24px rgba(29, 39, 51, 0.08);
+  }
+  .logo {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: #0f6ea8;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: 1px;
+  }
+  h1 { font-size: 20px; margin: 18px 0 4px; }
+  .sub { margin: 0 0 22px; font-size: 13px; color: #5c6b7a; }
+  label { display: block; font-size: 13px; font-weight: 600; margin: 14px 0 6px; }
+  input {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 14px;
+    border: 1px solid #c3cddb;
+    border-radius: 6px;
+    background: #fbfcfd;
+  }
+  input:focus { outline: 2px solid #0f6ea8; outline-offset: 1px; }
+  button {
+    width: 100%;
+    margin-top: 20px;
+    padding: 11px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+    background: #0f6ea8;
+    border: 0;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .bantuan { font-size: 12px; color: #5c6b7a; margin: 18px 0 0; }
+  .tanda {
+    margin: 22px 0 0;
+    padding-top: 14px;
+    border-top: 1px solid #e6ebf1;
+    font-size: 11px;
+    line-height: 1.5;
+    color: #8794a3;
+  }
+</style>
+</head>
+<body>
+  <div class="kartu">
+    <div class="logo">TB</div>
+    <h1>Tirtabyte Connect</h1>
+    <p class="sub">Portal karyawan PT Tirtabyte Nusantara</p>
+
+    <form method="post" action="http://localhost:8400/cgi-bin/masuk.cgi">
+      <label for="pengguna">Nama pengguna</label>
+      <input id="pengguna" name="pengguna" type="text" autocomplete="username" required>
+
+      <label for="sandi">Kata sandi</label>
+      <input id="sandi" name="sandi" type="password" autocomplete="current-password" required>
+
+      <button type="submit">Masuk</button>
+    </form>
+
+    <p class="bantuan">Lupa kata sandi? Ajukan lewat Service Desk di jaringan internal.
+    Tim IT tidak pernah meminta kata sandi Anda lewat surel maupun telepon.</p>
+
+    <p class="tanda">Lab CEH Course-Net. Tirtabyte adalah merek fiktif dan domain
+    tirtabyte.example tidak dapat didaftarkan. Jangan pernah mengetik kata sandi
+    sungguhan di halaman mana pun di dalam lab ini.</p>
+  </div>
+</body>
+</html>

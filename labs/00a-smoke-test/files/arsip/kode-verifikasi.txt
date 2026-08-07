@@ -1,0 +1,16 @@
+KODE VERIFIKASI LAB 00a
+=======================
+
+SMOKE-OK-8000
+
+Kalau Anda membaca baris di atas, artinya Anda sudah membuktikan hal yang
+tidak bisa dibuktikan dari browser: toolbox punya jalan ke target yang sama
+sekali tidak mem-publish port.
+
+Container ini bernama "arsip". Cek sendiri di compose.yaml lab ini, dia tidak
+punya satu pun baris "ports:". Dari browser laptop, dia tidak ada. Dari dalam
+jaringan lab, dia terbuka lebar.
+
+Itu pola yang berulang sepanjang minggu ini, dan juga di lapangan: yang
+kelihatan dari luar hampir selalu lebih sedikit daripada yang kelihatan dari
+dalam. Karena itu satu pijakan di dalam jaringan mengubah seluruh peta.

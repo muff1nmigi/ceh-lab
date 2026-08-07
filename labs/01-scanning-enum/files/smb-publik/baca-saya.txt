@@ -1,0 +1,6 @@
+Folder ini boleh dibaca semua orang di kantor, termasuk tamu.
+
+Jangan menaruh berkas berisi data pribadi di sini. Folder keuangan yang
+terbatas ada di share terpisah dan hanya bisa dibuka oleh pemiliknya.
+
+Kode temuan untuk latihan: SMB-PUBLIK-7781

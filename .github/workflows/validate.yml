@@ -1,0 +1,142 @@
+name: validate
+on:
+  push:
+  pull_request:
+  schedule:
+    # Tiap Senin pagi WIB. Gunanya nangkep image yang dihapus atau tag yang
+    # digeser upstream, jauh sebelum ketahuan di depan kelas.
+    - cron: "0 1 * * 1"
+
+jobs:
+  gerbang:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Struktur tiap lab lengkap
+        run: |
+          rc=0
+          for d in labs/*/; do
+            d="${d%/}"
+            [ "$(basename "$d")" = "_template" ] && continue
+            # README.md ikut wajib. Lab tanpa panduan itu lab yang cuma bisa
+            # dijalanin sama orang yang nulis compose-nya.
+            for f in meta.env compose.yaml README.md; do
+              [ -f "$d/$f" ] || { echo "KURANG $d/$f"; rc=1; }
+            done
+            for k in ID MODUL MODUL_NAMA JUDUL DURASI LEVEL TIER; do
+              grep -q "^$k=" "$d/meta.env" || { echo "meta.env $d kurang kunci $k"; rc=1; }
+            done
+            id="$(awk -F= '$1=="ID"{print $2}' "$d/meta.env")"
+            case "$(basename "$d")" in "$id"-*) ;; *) echo "ID '$id' ga cocok sama nama folder $d"; rc=1 ;; esac
+            # README kosong lolos cek "-f", jadi panjangnya ikut dicek.
+            if [ -f "$d/README.md" ] && [ "$(wc -c < "$d/README.md")" -lt 200 ]; then
+              echo "$d/README.md nyaris kosong, kurang dari 200 karakter"; rc=1
+            fi
+          done
+          exit $rc
+
+      - name: Compose tiap lab valid
+        run: |
+          rc=0
+          export REPO_ROOT="$PWD"
+          for d in labs/*/; do
+            d="${d%/}"
+            [ "$(basename "$d")" = "_template" ] && continue
+            # Susunan berkasnya harus sama persis dengan yang dipakai ./lab,
+            # termasuk potongan internet buat lab yang INTERNET=1. Kalau ga,
+            # gerbang ini nolak lab yang sebenarnya benar.
+            extra=""
+            grep -q '^INTERNET=1$' "$d/meta.env" && extra="-f _shared/compose.internet.yaml"
+            # shellcheck disable=SC2086
+            if ! COMPOSE_PROFILES=bonus,x86 docker compose \
+                 --project-directory "$d" \
+                 -f _shared/compose.base.yaml -f "$d/compose.yaml" $extra config -q; then
+              echo "compose RUSAK di $d"; rc=1
+            fi
+            grep -q '^version:' "$d/compose.yaml" && { echo "$d masih pakai 'version:', buang"; rc=1; }
+          done
+          exit $rc
+
+      - name: Pagar jaringan di potongan bersama masih utuh
+        run: |
+          # Gerbang anti-mundur. Baris-baris ini yang bikin lab ga bisa nyentuh
+          # jaringan kelas, dan semuanya gampang kebuang waktu ngoprek.
+          rc=0
+          f=_shared/compose.base.yaml
+          # Baris komentar dibuang dulu. Berkas itu MENJELASKAN kenapa
+          # seccomp=unconfined dan NET_ADMIN ga dipakai, jadi tanpa saringan ini
+          # gerbangnya nyala gara-gara penjelasannya sendiri.
+          isi() { grep -v '^[[:space:]]*#' "$f"; }
+          isi | grep -qE '^[[:space:]]+internal: true[[:space:]]*$' \
+            || { echo "network 'default' di $f udah ga internal. Itu pagar utamanya."; rc=1; }
+          if isi | grep -qE '^[[:space:]]*-[[:space:]]*NET_ADMIN[[:space:]]*$'; then
+            echo "NET_ADMIN balik lagi ke toolbox di $f. Lab yang butuh nambahin sendiri."; rc=1
+          fi
+          if isi | grep -qE 'seccomp=unconfined'; then
+            echo "seccomp=unconfined balik lagi di $f. Tulis alasannya di lab yang butuh, bukan di sini."; rc=1
+          fi
+          if isi | grep -qE 'ghcr\.io/muffinmigi/ceh-toolbox'; then
+            echo "$f nunjuk image toolbox di GHCR yang ga pernah ada. Toolbox dibangun lokal."; rc=1
+          fi
+          [ -f _shared/compose.internet.yaml ] \
+            || { echo "_shared/compose.internet.yaml hilang. Lab OSINT ga punya jalan sah ke internet."; rc=1; }
+          exit $rc
+
+      - name: Gerbang compose per lab
+        run: |
+          # Isinya: network wajib internal, toolbox ga boleh keluar dari
+          # jaringan lab, port wajib diikat ke 127.0.0.1, URL di meta.env wajib
+          # punya port yang beneran dipublish, nol image amd64-only di jalur
+          # wajib, nol privileged, dan nol port host yang tabrakan antar lab.
+          sudo apt-get update -qq && sudo apt-get install -y jq >/dev/null
+          bash scripts/check-compose.sh
+
+      - name: Gerbang arsitektur image
+        run: bash scripts/check-arch.sh
+
+      - name: Berkas di git ga boleh lebih dari 1 MB
+        run: |
+          rc=0
+          while IFS= read -r f; do
+            sz=$(wc -c < "$f")
+            if [ "$sz" -gt 1048576 ]; then
+              echo "KEGEDEAN $f ($((sz/1024)) KB). Taruh di GitHub Releases, catat di assets.lock."
+              rc=1
+            fi
+          done < <(git ls-files)
+          exit $rc
+
+      - name: Gerbang gaya tulisan
+        run: |
+          # Nol em-dash, en-dash, kutip melengkung, elipsis, panah, bullet.
+          # Ini yang bikin tulisan ke-flag pendeteksi AI, dan repo ini publik.
+          # Semua .md ikut, termasuk README tiap lab yang dibaca peserta.
+          if grep -rnP '[\x{2010}-\x{2015}\x{2018}\x{2019}\x{201C}\x{201D}\x{2026}\x{2022}\x{00B7}\x{2190}-\x{21FF}]' \
+               --include='*.md' --include='*.sh' --include='*.ps1' --include='*.yaml' \
+               --include='*.yml' --include='*.env' --include='*.txt' --include='*.cmd' \
+               --include='Dockerfile' --include='lab' . ; then
+            echo "Ada karakter terlarang di atas. Ganti pakai hyphen, koma, titik, atau ->"
+            exit 1
+          fi
+          echo "gaya tulisan bersih"
+
+      - name: shellcheck
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y shellcheck >/dev/null
+          shellcheck -S warning lab scripts/*.sh toolbox/*.sh
+
+      - name: Skrip bash wajib jalan di bash 3.2 (macOS masih ngirim itu)
+        run: |
+          # bash 3.2 nolak "case" di dalam $( ), nol associative array,
+          # nol ${v,,}. Ini kejadian nyata waktu nyusun repo ini.
+          #
+          # Baris komentar dibuang dulu. Tanpa itu, gerbang ini nyala gara-gara
+          # komentar di ./lab yang isinya justru menerangkan larangan ini, dan
+          # CI merah terus tanpa ada yang salah di kodenya.
+          rc=0
+          tanpa_komentar() { grep -rnE "$1" lab scripts/ | grep -vE '^[^:]+:[0-9]+:[[:space:]]*#'; }
+          tanpa_komentar 'declare -A' && { echo "associative array ga jalan di bash 3.2"; rc=1; }
+          tanpa_komentar '\$\{[A-Za-z_][A-Za-z0-9_]*,,\}' && { echo '${v,,} ga jalan di bash 3.2'; rc=1; }
+          tanpa_komentar 'mapfile|readarray' && { echo "mapfile ga ada di bash 3.2"; rc=1; }
+          exit $rc

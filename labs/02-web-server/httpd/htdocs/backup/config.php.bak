@@ -1,0 +1,31 @@
+<?php
+// ==========================================================================
+// BERKAS LATIHAN. Semua nilai di bawah ini palsu dan tidak menunjuk ke sistem
+// mana pun yang benar-benar ada.
+// ==========================================================================
+//
+// Cadangan konfigurasi sebelum migrasi ke server baru.
+// Ditinggal di document root karena tim buru-buru, lalu terlupakan.
+
+$db_host = "db01.lab.internal";
+$db_port = 3306;
+$db_name = "sinarlab_web";
+$db_user = "webapp_ro";
+$db_pass = "L4bDem0Only";
+
+$smtp_host = "mail.lab.internal";
+$smtp_user = "no-reply@lab.internal";
+
+// --------------------------------------------------------------------------
+// CATATAN TIM INFRASTRUKTUR, 3 Agustus
+// --------------------------------------------------------------------------
+// Panel Tomcat di server aplikasi masih memakai akun bawaan atas nama
+// "tomcat". Sandinya belum diganti dari daftar contoh yang ada di dokumentasi
+// vendor, dan akun itu masih memegang hak unggah aplikasi.
+//
+// TODO sebelum go-live:
+//   - ganti sandi akun tomcat
+//   - cabut hak manager-script dari akun yang dipakai orang
+//   - tutup /manager dari jaringan, sisakan hanya dari mesin lokal
+//   - hapus folder /backup ini
+?>

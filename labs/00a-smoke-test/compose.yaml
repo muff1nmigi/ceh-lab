@@ -1,0 +1,45 @@
+# Lab paling kecil di repo ini. Gunanya satu: membuktikan laptop peserta
+# beneran bisa menjalankan lab, sebelum hari-H.
+#
+# Kenapa dua container, padahal satu sudah cukup buat smoke test:
+#
+#   web     punya URL, jadi dia yang membuktikan jalur "browser di laptop ->
+#           port yang dipublish -> container". Jalur itu yang paling sering
+#           patah, dan patahnya beda antara OrbStack dan Docker Desktop.
+#
+#   arsip   SENGAJA tidak punya "ports:". Dia cuma bisa dijangkau dari dalam
+#           toolbox. Itu yang membuktikan jalur kedua, "toolbox -> jaringan
+#           lab", sekaligus menanamkan bahwa target dipanggil pakai NAMA
+#           service, bukan localhost. Peserta yang salah paham soal ini bakal
+#           macet di semua lab berikutnya, jadi lebih murah ketahuan di sini.
+#
+# Dua-duanya memakai image yang sama, httpd:2.4, jadi nol tambahan tarikan
+# registry. Image itu multiarch dan jalan native di Apple Silicon maupun
+# Intel, tanpa emulasi.
+#
+# Port 8000 diikat ke 127.0.0.1. Tanpa itu halaman lab kebuka dari seluruh
+# jaringan kantor tempat kelas berlangsung. Alasan lengkapnya ada di
+# _shared/compose.base.yaml.
+services:
+  web:
+    image: httpd:2.4
+    volumes:
+      # Read-only. Peserta tidak perlu mengubah isi target di lab ini, dan
+      # mount read-only bikin lab bisa diulang tanpa sisa.
+      - ./files/web:/usr/local/apache2/htdocs:ro
+    # "default" supaya toolbox bisa menjangkaunya, "edge" supaya "ports:"
+    # berfungsi. Dua-duanya wajib, bukan pilihan.
+    networks: [default, edge]
+    ports:
+      - "127.0.0.1:8000:80"
+
+  arsip:
+    image: httpd:2.4
+    volumes:
+      # Folder ini sengaja TIDAK punya index.html. Efeknya Apache menyajikan
+      # directory listing, dan itu memang temuan yang dicari di langkah 4.
+      # Nama resminya directory listing atau directory indexing, dan dia
+      # keluar di exam sebagai misconfiguration, bukan sebagai fitur.
+      - ./files/arsip:/usr/local/apache2/htdocs:ro
+    # Tanpa baris "networks", service otomatis masuk ke "default" saja.
+    # Itu memang yang diinginkan: nol jalan dari browser laptop ke sini.

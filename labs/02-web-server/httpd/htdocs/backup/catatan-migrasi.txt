@@ -1,0 +1,17 @@
+CATATAN MIGRASI, berkas latihan, isinya fiktif
+==============================================
+
+Server lama : web01, Apache httpd, melayani halaman statis
+Server baru : server aplikasi, Apache Tomcat, melayani aplikasi Java
+
+Yang belum selesai:
+
+1. Folder /backup ini masih terlayani lewat web. Seharusnya dipindahkan ke
+   luar document root, bukan sekadar disembunyikan namanya.
+2. Daftar isi direktori masih menyala di seluruh document root.
+3. Halaman /server-status masih terbuka untuk siapa saja.
+4. Panel administrasi Tomcat masih bisa dibuka dari jaringan.
+
+Nomor 4 yang paling berisiko. Panel itu punya fitur unggah aplikasi, dan
+fitur itu memang bagian dari produk, bukan celah. Yang salah adalah siapa
+yang boleh memakainya.

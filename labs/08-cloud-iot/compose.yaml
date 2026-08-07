@@ -1,0 +1,122 @@
+# Lab 08 - Cloud dan IoT hacking.
+#
+# Dua target, satu cerita. "cloud" adalah akun AWS palsu milik perusahaan
+# fiktif Nusatera Hidro. "plc" adalah kontroler instalasi pengolahan airnya.
+# Dokumen yang bocor dari bucket S3 yang terbuka itu yang memberi tahu peserta
+# di mana PLC-nya dan register mana yang dipakai, jadi bagian cloud memberi
+# makan bagian IoT dan bukan dua lab yang kebetulan ditempel jadi satu.
+#
+# Semua nama, kunci, dan sandi di dalam lab ini fiksi.
+#
+# ---------------------------------------------------------------------------
+# KENAPA localstack/localstack:4.9 DAN BUKAN :latest
+# ---------------------------------------------------------------------------
+# Diuji di mesin penyusun pada 2026-08-06: localstack/localstack:latest
+# (2026.7.2) adalah image Pro dan MENOLAK BOOT tanpa LOCALSTACK_AUTH_TOKEN.
+# Keluarannya persis begini, lalu container keluar dengan kode 55:
+#
+#   License activation failed!
+#   Reason: No credentials were found in the environment.
+#
+# Tag 4.9 masih edisi community, hidup tanpa token apa pun, dan
+# /_localstack/health menjawab "edition":"community","version":"4.9.2".
+# Jangan naikkan tag ini tanpa mengulang uji itu.
+#
+# ---------------------------------------------------------------------------
+# KENAPA TIDAK ADA MOUNT /var/run/docker.sock
+# ---------------------------------------------------------------------------
+# LocalStack minta soket Docker untuk menjalankan Lambda, dan dia mencetak
+# peringatan soal itu di log. Peringatan itu normal dan boleh diabaikan di sini,
+# karena lab ini cuma memakai S3, IAM, STS, dan Secrets Manager, dan tidak satu
+# pun dari empat itu butuh soket. Mount soket Docker juga DILARANG di repo ini
+# dan ditolak scripts/check-compose.sh, karena container yang bisa bicara ke
+# soket Docker host sudah setara root di laptop peserta.
+
+services:
+
+  # -------------------------------------------------------------------------
+  # BAGIAN CLOUD. Akun AWS palsu dengan tiga salah konfigurasi yang ditanam:
+  # bucket terbuka ke publik, kredensial ditulis di berkas konfigurasi, dan
+  # policy IAM dengan wildcard di Action sekaligus Resource.
+  # -------------------------------------------------------------------------
+  cloud:
+    image: localstack/localstack:4.9
+    hostname: cloud
+    networks: [default, edge]
+    ports:
+      # 4566 adalah satu-satunya port yang dipakai LocalStack sejak versi 2,
+      # semua layanan AWS dibedakan dari isi permintaan, bukan dari portnya.
+      - "127.0.0.1:8800:4566"
+    environment:
+      # Cuma empat layanan yang dinyalakan. Sisanya mati supaya boot lebih
+      # cepat dan supaya /_localstack/health jadi daftar pendek yang bisa
+      # dibaca peserta, bukan tiga puluh baris.
+      SERVICES: "s3,iam,sts,secretsmanager"
+      EAGER_SERVICE_LOADING: "1"
+      DEBUG: "0"
+      # Jaringan lab ini internal, jadi tidak ada jalan keluar sama sekali.
+      # Tiga baris berikut mematikan hal-hal yang akan mencoba keluar dan
+      # gagal berisik: telemetri, unduhan sertifikat, dan resolver DNS yang
+      # mencari upstream. Tanpa ini lab tetap jalan, tapi log-nya penuh
+      # peringatan yang bikin peserta mengira ada yang rusak.
+      DISABLE_EVENTS: "1"
+      SKIP_SSL_CERT_DOWNLOAD: "1"
+      DNS_ADDRESS: "0"
+    volumes:
+      # Semuanya di ready.d dijalankan LocalStack setelah dia siap melayani.
+      # Read only, supaya peserta yang mengubah berkas ini di laptopnya tidak
+      # bisa membuat container ini menjalankan apa pun yang lain.
+      - ./files/init-cloud.sh:/etc/localstack/init/ready.d/init-cloud.sh:ro
+    healthcheck:
+      # Yang dicek BUKAN "LocalStack sudah hidup", tapi "penyemaian sudah
+      # selesai". Hook di ready.d baru mulai jalan SETELAH LocalStack menulis
+      # "Ready.", jadi healthcheck yang cuma menyentuh /_localstack/health akan
+      # hijau saat bucket-nya belum ada. Akibatnya "./lab up 08" selesai,
+      # peserta langsung mengetik perintah langkah 2, dan dapat 404. Yang
+      # dipakai di sini adalah objek yang ditulis paling akhir oleh penyemai.
+      test:
+        - CMD-SHELL
+        - >-
+          curl -sf http://localhost:4566/nusatera-arsip-publik/dokumen/runbook-ot.txt
+          -o /dev/null || exit 1
+      interval: 3s
+      timeout: 5s
+      retries: 40
+      start_period: 10s
+
+  # -------------------------------------------------------------------------
+  # BAGIAN IoT. Kontroler Modbus TCP. Peta registernya di files/plc-register.json
+  # dan sengaja dibuat menyerupai instalasi pengolahan air, lengkap dengan
+  # catatan integrator yang tertinggal di dalam register.
+  # -------------------------------------------------------------------------
+  plc:
+    image: oitc/modbus-server:2.3.0
+    hostname: plc
+    networks: [default, edge]
+    ports:
+      - "127.0.0.1:8802:502"
+    volumes:
+      - ./files/plc-register.json:/app/modbus_server.json:ro
+    sysctls:
+      # Server ini berjalan sebagai UID 1434, bukan root, sementara 502 itu
+      # port istimewa. Runtime container modern sudah menyetel nilai ini ke 0
+      # sendiri, jadi baris ini biasanya tidak mengubah apa-apa. Ditulis
+      # eksplisit supaya hasilnya sama di OrbStack dan Docker Desktop, dan
+      # supaya kalau suatu saat gagal, gagalnya di sini dengan sebab yang
+      # kelihatan, bukan berupa container yang mati diam-diam.
+      net.ipv4.ip_unprivileged_port_start: "0"
+    healthcheck:
+      # Tidak ada curl di image ini, dan tidak ada shell bawaan yang membawa
+      # netcat. Yang pasti ada adalah Python, karena servernya sendiri Python.
+      # Yang diuji beneran satu permintaan Modbus, bukan cuma soket terbuka:
+      # dua belas byte itu adalah Read Holding Registers alamat 0 sebanyak 1.
+      test:
+        - CMD-SHELL
+        - >-
+          python -c "import socket,struct;s=socket.create_connection(('127.0.0.1',502),3);
+          s.sendall(struct.pack('>HHHBBHH',1,0,6,1,3,0,1));
+          exit(0 if len(s.recv(64))>8 else 1)"
+      interval: 3s
+      timeout: 5s
+      retries: 20
+      start_period: 5s

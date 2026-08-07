@@ -1,0 +1,36 @@
+# Aturan main compose lab:
+# 1. JANGAN definisikan service "toolbox", itu datang dari _shared/compose.base.yaml.
+# 2. JANGAN pakai "version:", udah usang.
+# 3. Pin tag versinya, jangan "latest". Hari-H bukan waktunya kejutan.
+# 4. Image yang cuma punya amd64 WAJIB dikasih "platform: linux/amd64" tepat
+#    di bawah barisnya. Gerbang CI nolak kalau ga.
+# 5. Port host dipatok unik per lab biar dua lab bisa nyala barengan.
+#
+# 6. PORT WAJIB DIIKAT KE 127.0.0.1, formatnya "127.0.0.1:<host>:<container>".
+#    Tanpa itu Docker mengikat ke 0.0.0.0, dan target yang sengaja rapuh
+#    (DVWA, Juice Shop) ikut kelihatan dari seluruh jaringan kelas. Peserta
+#    lain, dan siapa pun di jaringan kantor, bisa membukanya. CI menolak port
+#    yang tidak diikat ke 127.0.0.1.
+#
+# 7. SERVICE YANG MEM-PUBLISH PORT WAJIB NEMPEL DI DUA NETWORK:
+#      networks: [default, edge]
+#    "default" itu jaringan lab yang internal, tempat toolbox menyerang.
+#    "edge" cuma dipakai supaya "ports:" berfungsi, karena Docker menolak
+#    mem-publish port kalau semua network container itu internal.
+#    Service yang tidak punya URL untuk dibuka di browser tidak perlu menyebut
+#    networks sama sekali, dia otomatis masuk "default".
+#    Jangan pernah menulis "networks: [edge]" saja: target jadi tidak bisa
+#    dijangkau toolbox, dan CI menolaknya.
+#
+# 8. DILARANG di berkas ini: "network_mode", "privileged: true", dan
+#    mendefinisikan ulang network "default". Ketiganya membatalkan pagar
+#    jaringan yang dijelaskan di _shared/compose.base.yaml.
+#
+# 9. Lab yang butuh internet: JANGAN diakali di sini. Tulis INTERNET=1 di
+#    meta.env dan baca _shared/compose.internet.yaml.
+services:
+  target:
+    image: ganti-ini:1.0
+    networks: [default, edge]
+    ports:
+      - "127.0.0.1:8080:80"

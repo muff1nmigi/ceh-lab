@@ -1,0 +1,17 @@
+CATATAN PERAWATAN SERVER ARSIP
+==============================
+
+Berkas ini sengaja ditaruh di sini sebagai contoh, dan isinya fiktif.
+
+Server arsip internal, tidak dipublikasikan ke luar.
+Jadwal backup   : tiap Minggu 02:00
+Penanggung jawab: tim infrastruktur
+Catatan         : direktori ini belum dimatikan indexing-nya, tolong
+                  dibereskan setelah migrasi.
+
+Perhatikan kalimat terakhir. Berkas semacam ini yang bikin directory listing
+berbahaya: dia bukan cuma membocorkan nama berkas, tapi juga isi berkas yang
+penulisnya mengira tidak akan pernah dibaca orang luar.
+
+Di lab ini isinya karangan. Di lapangan, berkas yang setara biasanya berisi
+nama host internal, nama akun, jadwal maintenance, dan sesekali kata sandi.

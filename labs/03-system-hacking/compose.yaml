@@ -1,0 +1,78 @@
+# Lab 03 - System hacking dan Active Directory
+#
+# Dua target:
+#   dc      Domain Controller Active Directory sungguhan (Samba 4.23 AD DC).
+#           SMB, LDAP, LDAPS, Kerberos, DNS, RPC. Dibangun dari dc/Dockerfile
+#           di laptop peserta, alasannya panjang dan ada di berkas itu.
+#   victim  Mesin Linux biasa dengan tiga salah konfigurasi privilege
+#           escalation. Image linuxserver/openssh-server, multiarch, tidak
+#           di-build, cuma disiapkan lewat skrip di files/.
+#
+# Port host yang dipakai lab ini: 8322, 8345, 8389, 8336. Semua diikat ke
+# 127.0.0.1, jadi tidak ada satu pun yang terlihat dari jaringan kelas.
+#
+# Nol image amd64-only, jadi nol emulasi. Dua-duanya jalan native di Apple
+# Silicon dan di Intel.
+services:
+  dc:
+    build:
+      context: ./dc
+      dockerfile: Dockerfile
+    image: ceh-dc:1.0
+    container_name: ${COMPOSE_PROJECT_NAME:-ceh}-dc
+    # Nama NetBIOS DC1 harus cocok dengan --host-name waktu provision, kalau
+    # tidak, samba menolak nyala.
+    hostname: DC1
+    init: true
+    networks:
+      default:
+        aliases:
+          # Nama FQDN dipakai supaya "ldaps://dc1.cehlab.local" cocok dengan
+          # CN di sertifikat TLS yang dibuat samba sendiri, dan supaya
+          # peserta melihat nama yang sama dengan yang keluar di rootDSE.
+          - dc1.cehlab.local
+          - cehlab.local
+      edge: {}
+    ports:
+      - "127.0.0.1:8345:445"
+      - "127.0.0.1:8389:389"
+      - "127.0.0.1:8336:636"
+    healthcheck:
+      # LDAP yang menjawab berarti seluruh peran DC sudah bangun. Cek ke 445
+      # saja tidak cukup, smbd hidup lebih dulu daripada KDC dan LDAP.
+      test: ["CMD", "sh", "-c", "ldbsearch -H ldap://localhost -s base -b '' dnsHostName >/dev/null 2>&1"]
+      interval: 5s
+      timeout: 5s
+      retries: 24
+      start_period: 10s
+
+  victim:
+    image: linuxserver/openssh-server:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-ceh}-victim
+    hostname: srv-akuntansi
+    # "init: true" SENGAJA TIDAK ADA di sini. Image ini memakai s6-overlay,
+    # dan s6 menolak jalan kalau bukan PID 1: "s6-overlay-suexec: fatal: can
+    # only run as pid 1". Diuji 2026-08-06, container langsung exit 100.
+    environment:
+      PUID: "1000"
+      PGID: "1000"
+      TZ: Asia/Jakarta
+      USER_NAME: magang
+      # Sandi yang sama dengan akun domain "magang". Pemakaian ulang sandi
+      # lintas sistem itu temuan nomor satu di pentest internal, jadi di sini
+      # dibuat sengaja supaya peserta mengalaminya, bukan cuma membacanya.
+      USER_PASSWORD: Password1
+      PASSWORD_ACCESS: "true"
+      # Sudo bawaan image itu NOPASSWD ALL, terlalu mudah dan tidak
+      # mengajarkan apa pun. Dimatikan, lalu diganti salah konfigurasi yang
+      # lebih realistis di files/siapkan-victim.sh.
+      SUDO_ACCESS: "false"
+    volumes:
+      - ./files/siapkan-victim.sh:/custom-cont-init.d/10-siapkan-victim.sh:ro
+    networks:
+      - default
+      - edge
+    ports:
+      # sshd di image ini jalan sebagai pengguna biasa, jadi dia mendengarkan
+      # di 2222, bukan 22. Dari dalam toolbox: ssh -p 2222 magang@victim
+      - "127.0.0.1:8322:2222"
