@@ -34,7 +34,7 @@ sependek mungkin.
 Ambil repo dengan git supaya akhiran baris skripnya benar:
 
 ```
-git clone <alamat repo ini>
+git clone https://github.com/muff1nmigi/ceh-lab.git
 cd ceh-lab
 ```
 
