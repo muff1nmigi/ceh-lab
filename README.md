@@ -2,15 +2,15 @@
 
 Lab praktik Certified Ethical Hacker yang jalan penuh di laptop Anda sendiri. Nol server, nol VPS, nol tunnel. Satu perintah untuk menyalakan, satu perintah untuk mematikan.
 
-Repo ini materi ajar yang dikembangkan sendiri oleh **Evan Hendra**, dipakai untuk kelas CEH. Isinya lab tambahan yang menemani kelas, bukan slide resmi kelasnya
+Repo ini materi ajar yang dikembangkan sendiri oleh **Evan Hendra**, dipakai untuk kelas CEH. Isinya lab tambahan yang menemani kelas, bukan slide resmi kelasnya.
 
 Repo ini publik dan boleh dipakai ulang oleh pengajar lain. Lihat bagian Lisensi.
 
 ---
 
-## Tiga langkah
+## Empat langkah
 
-Kerjakan berurutan. Kalau Anda buka halaman untuk persiapan kelas, tiga langkah ini cukup untuk membuat laptop Anda siap dipakai di kelas pada pagi hari. Perkiraan waktu 30 sampai 45 menit, sebagian besarnya menunggu unduhan.
+Kerjakan berurutan. Kalau Anda buka halaman untuk persiapan kelas, empat langkah ini cukup untuk membuat laptop Anda siap dipakai di kelas pada pagi hari. Perkiraan waktu 30 sampai 45 menit, sebagian besarnya menunggu unduhan.
 
 ### Langkah 1. Pasang Docker
 
