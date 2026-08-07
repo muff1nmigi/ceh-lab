@@ -2,7 +2,7 @@
 
 Lab praktik Certified Ethical Hacker yang jalan penuh di laptop Anda sendiri. Nol server, nol VPS, nol tunnel. Satu perintah untuk menyalakan, satu perintah untuk mematikan.
 
-Repo ini materi ajar yang dikembangkan sendiri oleh **Evan Hendra**, dipakai untuk kelas CEH. Isinya lab tambahan yang menemani kelas, bukan slide resmi kelasnya. Slide dan judul materi milik Course-Net dan tidak ada di repo ini.
+Repo ini materi ajar yang dikembangkan sendiri oleh **Evan Hendra**, dipakai untuk kelas CEH. Isinya lab tambahan yang menemani kelas, bukan slide resmi kelasnya
 
 Repo ini publik dan boleh dipakai ulang oleh pengajar lain. Lihat bagian Lisensi.
 
