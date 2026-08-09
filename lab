@@ -56,15 +56,15 @@ cmd_doctor() {
 
   if ! command -v docker >/dev/null 2>&1; then
     bad "Docker belum terpasang."
-    info "Windows : docs/01-pasang-docker-windows.md"
-    info "macOS   : docs/02-pasang-docker-macos.md"
+    info "Siapkan VM : docs/01-siapkan-kali-vm.md"
+    info "Pasang Docker: docs/02-pasang-docker-di-kali.md"
     doctor_finish 1
     return 1
   fi
   ok "Docker terpasang, versi $(docker version --format '{{.Client.Version}}' 2>/dev/null)"
 
   if ! docker info >/dev/null 2>&1; then
-    bad "Engine Docker mati. Buka aplikasi Docker Desktop, tunggu ikonnya ijo, ulangi perintah ini."
+    bad "Engine Docker mati. Jalankan: sudo systemctl start docker"
     doctor_finish 1
     return 1
   fi
@@ -89,7 +89,7 @@ cmd_doctor() {
     ok "RAM buat Docker: ${RAM_GB} GB, CPU: ${ENGINE_CPUS}"
   else
     warn "RAM buat Docker cuma ${RAM_GB} GB, saran minimal ${MIN_RAM_GB} GB."
-    info "Naikin di Docker Desktop: Settings, Resources, Memory."
+    info "Naikin RAM VM-nya di VirtualBox, VMware, atau Parallels. Matikan VM dulu."
     DOCTOR_WARN=1
   fi
 
@@ -105,7 +105,7 @@ cmd_doctor() {
     DOCTOR_WARN=1
   else
     warn "Emulasi amd64 tidak jalan di laptop ini."
-    info "Docker Desktop: Settings, General, centang 'Use Rosetta for x86_64/amd64 emulation'."
+    info "Kelas ini memakai Kali VM x86_64, jadi emulasi tidak diperlukan. Kalau pesan ini muncul, kabari instruktur."
     info "Sebagian besar lab tetap jalan. Lapor ke instruktur biar dicatat."
     DOCTOR_WARN=1
   fi

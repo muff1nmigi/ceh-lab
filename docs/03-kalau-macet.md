@@ -8,13 +8,13 @@ panggil instruktur dan tunjukkan layar Anda apa adanya, jangan diringkas.
 | `port is already allocated`, atau halaman terbuka tapi isinya aplikasi lain | [1. Port sudah terpakai](#1-port-sudah-terpakai) |
 | `error from registry: denied` saat menarik image | [2. denied saat menarik image](#2-denied-saat-menarik-image) |
 | `toomanyrequests`, `You have reached your pull rate limit` | [3. Kuota Docker Hub habis](#3-kuota-docker-hub-habis) |
-| Docker Desktop tidak mau menyala dan menyebut WSL | [4. WSL2 belum aktif, khusus Windows](#4-wsl2-belum-aktif-khusus-windows) |
+| `Unable to locate package docker-compose-v2` | [4. apt bilang Unable to locate package](#4-apt-bilang-unable-to-locate-package) |
 | `no space left on device`, atau laptop tiba-tiba penuh | [5. Disk penuh](#5-disk-penuh) |
 | Container menyala tapi halamannya tidak terbuka | [6. Container nyala tapi halaman tidak terbuka](#6-container-nyala-tapi-halaman-tidak-terbuka) |
 | Berkas di folder lab hilang sendiri | [7. Antivirus menghapus perkakas](#7-antivirus-menghapus-perkakas) |
 | `permission denied` saat menjalankan `./lab` | [8. Launcher tidak bisa dijalankan](#8-launcher-tidak-bisa-dijalankan) |
 | `bad interpreter: /usr/bin/env bash^M` | [9. Akhiran baris salah](#9-akhiran-baris-salah) |
-| `Docker lo lagi di mode container Windows` | [10. Docker sedang di mode Windows containers](#10-docker-sedang-di-mode-windows-containers) |
+| `tlsv1 alert internal error`, atau `GnuTLS handshake failed` | [10. TLS gagal dari dalam VM](#10-tls-gagal-dari-dalam-vm) |
 
 ---
 
@@ -187,41 +187,46 @@ curl -s --head -H "Authorization: Bearer $TOK" \
 
 ---
 
-## 4. WSL2 belum aktif, khusus Windows
+## 4. apt bilang Unable to locate package
 
-### Gejalanya
+Gejalanya:
 
-Docker Desktop menolak menyala, atau menyala lalu langsung berhenti, dengan pesan yang
-menyebut WSL, WSL 2, atau virtual machine platform. Bisa juga `./lab.cmd doctor` berhenti
-di baris `Engine Docker mati`.
+```
+E: Unable to locate package docker-compose-v2
+```
 
-### Sebabnya
+**Ini ranjau yang paling sering kena, dan akibatnya lebih besar dari kelihatannya.**
 
-Salah satu dari tiga, urut dari yang paling sering:
+Banyak panduan Docker di internet menyebut paket `docker-compose-v2`. Nama itu **tidak
+ada di repo Kali**. Yang ada namanya `docker-compose`, dan meskipun namanya begitu, isinya
+memang Compose versi 2.
 
-1. **Laptop belum di-restart** setelah `wsl --install`. Ini penyebab nomor satu.
-2. Virtualisasi mati di BIOS atau UEFI.
-3. WSL terpasang tapi versinya masih 1, bukan 2.
+Yang bikin ini menyesatkan: kalau satu nama paket tidak ketemu, apt **membatalkan seluruh
+perintah** dan tidak memasang satu pun paket lain di baris yang sama. Jadi kalau Anda
+mengetik:
 
-### Obatnya
+```
+sudo apt install -y docker.io docker-cli docker-compose-v2 git
+```
 
-Kerjakan berurutan, jangan dilompati.
+maka `docker.io`, `docker-cli`, dan `git` juga **tidak jadi terpasang**. Gejala yang Anda
+lihat berikutnya adalah `docker: command not found`, dan Anda akan mengira Docker-nya yang
+bermasalah, padahal yang salah cuma satu kata.
 
-1. Restart laptop. Restart betulan, bukan sign out dan bukan menutup layar.
-2. Buka Task Manager, tab Performance, klik CPU, lihat baris `Virtualization`. Kalau
-   tertulis `Disabled`, ikuti Langkah 1 di
-   [01-pasang-docker-windows.md](01-pasang-docker-windows.md).
-3. Buka PowerShell sebagai Administrator dan jalankan:
-   ```
-   wsl --install
-   wsl --update
-   wsl --set-default-version 2
-   wsl --status
-   ```
-   Yang Anda cari di keluaran `wsl --status`: `Default Version: 2`.
-4. Restart lagi, lalu buka Docker Desktop dan tunggu sampai tertulis `Engine running`.
+Obatnya, pakai nama yang benar:
 
----
+```
+sudo apt install -y docker.io docker-cli docker-compose git curl
+```
+
+Lalu pastikan keduanya menjawab:
+
+```
+docker --version
+docker compose version
+```
+
+Perhatikan `docker compose` pakai spasi, bukan tanda hubung.
 
 ## 5. Disk penuh
 
@@ -464,18 +469,54 @@ git config --global core.autocrlf false
 
 ---
 
-## 10. Docker sedang di mode Windows containers
+## 10. TLS gagal dari dalam VM
 
-### Gejalanya
+Gejalanya, dari dalam Kali:
 
-Launcher berhenti dengan pesan yang menyebut mode container Windows.
+```
+curl: (35) TLS connect error: error:0A000438:SSL routines::tlsv1 alert internal error
+```
 
-### Sebabnya
+atau waktu `git clone`:
 
-Docker Desktop di Windows bisa menjalankan container Linux atau container Windows, dan
-hanya satu mode aktif pada satu waktu. Semua lab di repo ini adalah container Linux.
+```
+fatal: unable to access '...': GnuTLS, handshake failed: Internal error
+```
 
-### Obatnya
+Cirinya khas: **gagal ke semua situs, bukan cuma satu**, dan `ping` tetap jalan.
 
-Klik kanan ikon Docker di taskbar, pilih `Switch to Linux containers`. Tunggu Docker
-Desktop menyala kembali, lalu ulangi perintah Anda.
+Yang perlu Anda pahami dulu: ini **hampir selalu bukan salah Kali**. Kalau dua pustaka TLS
+yang berbeda gagal dengan cara yang sama (curl memakai OpenSSL, git memakai GnuTLS),
+tersangkanya jaringan, bukan perangkat lunaknya.
+
+Dua sebab yang paling sering:
+
+**Router memperlakukan perangkat baru secara berbeda.** VM Anda punya alamat MAC dan IP
+baru di jaringan itu. Sebagian router rumah dan kantor menaruh perangkat yang belum
+dikenal ke karantina, atau memeriksa TLS-nya dengan cara yang merusak.
+
+**Mode jaringan VM Bridged.** Mode ini membuat VM tampil sebagai perangkat terpisah di
+jaringan, dan justru itu yang memicu perlakuan di atas.
+
+Obat yang paling sering berhasil, dan hanya butuh satu menit:
+
+1. Matikan VM.
+2. Ubah mode jaringannya dari **Bridged** menjadi **NAT**.
+   VirtualBox lewat Settings dan Network, VMware lewat Network Adapter,
+   Parallels lewat Hardware dan Network.
+3. Nyalakan lagi, lalu ulangi `curl -sI https://github.com | head -1`.
+
+Mode NAT membuat VM keluar memakai identitas laptop Anda, dan laptop Anda sudah dikenal
+jaringan itu.
+
+Kalau masih gagal, periksa jam VM, karena jam yang meleset jauh juga merusak validasi
+sertifikat:
+
+```
+date
+sudo timedatectl set-ntp true
+```
+
+Kalau dua hal itu sudah dicoba dan masih gagal, kabari instruktur beserta keluaran
+perintahnya. Jangan menghabiskan waktu menebak sendiri.
+

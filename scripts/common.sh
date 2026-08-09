@@ -48,10 +48,10 @@ meta_get() {
 # ---------------------------------------------------------------------------
 detect_engine() {
   command -v docker >/dev/null 2>&1 || die \
-    "Docker belum terpasang. Baca docs/01-pasang-docker-windows.md atau docs/02-pasang-docker-macos.md"
+    "Docker belum terpasang. Baca docs/02-pasang-docker-di-kali.md"
 
   if ! docker info >/dev/null 2>&1; then
-    die "Docker terpasang tetapi engine-nya mati. Buka aplikasi Docker Desktop atau OrbStack, tunggu ikonnya hidup, lalu ulangi."
+    die "Docker terpasang tetapi engine-nya mati. Jalankan: sudo systemctl start docker"
   fi
 
   ENGINE_ARCH_RAW="$(docker info --format '{{.Architecture}}' 2>/dev/null)"
@@ -67,13 +67,13 @@ detect_engine() {
   export ARCH HOST_PLATFORM
 
   if [ "$ENGINE_OS" != "linux" ]; then
-    die "Docker sedang berada di mode container Windows. Klik kanan ikon Docker di taskbar, pilih 'Switch to Linux containers', lalu ulangi."
+    die "Docker tidak sedang di mode container Linux. Lab ini harus dijalankan di dalam Kali VM."
   fi
 }
 
 detect_compose() {
   docker compose version >/dev/null 2>&1 || die \
-    "'docker compose' tidak tersedia. Docker Desktop versi baru sudah membawanya. Kalau Anda memasang docker.io dari apt, pasang juga paket docker-compose-plugin."
+    "'docker compose' tidak tersedia. Pasang paketnya: sudo apt install -y docker-compose   (namanya docker-compose, BUKAN docker-compose-v2 yang tidak ada di repo Kali)"
 }
 
 # Uji beneran, bukan asumsi: bisa ga engine ini jalanin container amd64.

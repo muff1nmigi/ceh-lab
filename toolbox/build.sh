@@ -48,7 +48,7 @@ title "BUILD TOOLBOX LAB CEH"
 # ---------------------------------------------------------------------------
 if ! command -v docker >/dev/null 2>&1; then
   bad "Docker belum terpasang di laptop ini."
-  info "macOS   : baca docs/02-pasang-docker-macos.md"
+  info "Baca docs/02-pasang-docker-di-kali.md"
   info "Windows : jalankan build.ps1, bukan build.sh"
   exit 1
 fi

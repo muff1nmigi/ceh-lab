@@ -1,6 +1,6 @@
 # Lab CEH
 
-Lab praktik Certified Ethical Hacker yang jalan penuh di laptop Anda sendiri. Nol server, nol VPS, nol tunnel. Satu perintah untuk menyalakan, satu perintah untuk mematikan.
+Lab praktik Certified Ethical Hacker yang jalan penuh di dalam Kali VM Anda sendiri. Nol server, nol VPS, nol tunnel. Satu perintah untuk menyalakan, satu perintah untuk mematikan.
 
 Repo ini materi ajar yang dikembangkan sendiri oleh **Evan Hendra**, dipakai untuk kelas CEH. Isinya lab tambahan yang menemani kelas, bukan slide resmi kelasnya.
 
@@ -10,19 +10,19 @@ Repo ini publik dan boleh dipakai ulang oleh pengajar lain. Lihat bagian Lisensi
 
 ## Empat langkah
 
-Kerjakan berurutan. Kalau Anda buka halaman untuk persiapan kelas, empat langkah ini cukup untuk membuat laptop Anda siap dipakai di kelas pada pagi hari. Perkiraan waktu 30 sampai 45 menit, sebagian besarnya menunggu unduhan.
+Kerjakan berurutan, **semuanya di dalam Kali VM Anda**, bukan di laptop langsung. Empat langkah ini cukup untuk membuat VM Anda siap dipakai di kelas. Perkiraan waktu 30 sampai 45 menit, sebagian besarnya menunggu unduhan.
 
-### Langkah 1. Pasang Docker
+### Langkah 1. Siapkan VM dan pasang Docker di dalamnya
 
-Pilih panduan sesuai sistem operasi Anda. Jangan lompat, tiap panduan sudah dipangkas sependek mungkin.
+Jangan lompat, tiap panduan sudah dipangkas sependek mungkin.
 
-| Sistem operasi | Panduan |
+| Panduan | Isinya |
 |---|---|
-| Windows 10 atau 11 | [docs/01-pasang-docker-windows.md](docs/01-pasang-docker-windows.md) |
-| macOS, Apple Silicon maupun Intel | [docs/02-pasang-docker-macos.md](docs/02-pasang-docker-macos.md) |
-| Linux | [docs/03-pasang-docker-linux.md](docs/03-pasang-docker-linux.md) |
+| Menyiapkan Kali VM | [docs/01-siapkan-kali-vm.md](docs/01-siapkan-kali-vm.md) |
+| Memasang Docker di dalam Kali | [docs/02-pasang-docker-di-kali.md](docs/02-pasang-docker-di-kali.md) |
+| Kalau ada yang macet | [docs/03-kalau-macet.md](docs/03-kalau-macet.md) |
 
-### Langkah 2. Ambil repo ini, lalu cek kesiapan laptop
+### Langkah 2. Ambil repo ini, lalu cek kesiapan VM
 
 Ambil repo dengan git supaya akhiran baris skripnya benar:
 
@@ -31,36 +31,33 @@ git clone https://github.com/muff1nmigi/ceh-lab.git
 cd ceh-lab
 ```
 
-Kalau Anda mengunduh ZIP dari tombol Code di GitHub, buka folder hasil ekstraknya, lalu di macOS atau Linux jalankan `chmod +x lab` satu kali.
+Kalau Anda mengunduh ZIP dari tombol Code di GitHub, buka folder hasil ekstraknya lalu jalankan `chmod +x lab` satu kali.
 
 Sekarang jalankan pemeriksa kesiapan:
 
 ```
-./lab doctor          # macOS dan Linux
-.\lab.cmd doctor      # Windows
+./lab doctor
 ```
 
-Perintah ini memeriksa Docker, arsitektur laptop, RAM, sisa disk, kemampuan menjalankan container Intel, dan koneksi ke registry. Yang Anda kejar adalah baris terakhir `SEMUA HIJAU`. Kalau ada baris merah, betulkan dulu sesuai sarannya.
+Perintah ini memeriksa Docker, arsitektur, RAM, sisa disk, dan koneksi ke registry. Yang Anda kejar adalah baris terakhir `SEMUA HIJAU`. Kalau ada baris merah, betulkan dulu sesuai sarannya.
 
 Kalau ada baris kuning yang tidak hilang, kirim laporannya ke instruktur:
 
 ```
-./lab doctor --report          # macOS dan Linux
-.\lab.cmd doctor --report      # Windows
+./lab doctor --report
 ```
 
-Perintah itu menulis berkas `laporan-siap-<nama-laptop>.txt` di folder repo. Kirim berkas itu, bukan tangkapan layar.
+Perintah itu menulis satu berkas di folder repo. Kirim berkas itu, bukan tangkapan layar.
 
 ### Langkah 3. Bangun terminal penyerang, sekali saja
 
-Terminal penyerang tidak ditarik dari internet, tetapi dibangun di laptop Anda sendiri. Ini yang membuat lab tetap jalan walau jaringan kelas sedang padat.
+Terminal penyerang tidak ditarik dari internet, tetapi dibangun di dalam VM Anda sendiri. Ini yang membuat lab tetap jalan walau jaringan kelas sedang padat.
 
 ```
-./lab build           # macOS dan Linux
-.\lab.cmd build       # Windows
+./lab build
 ```
 
-Jalankan ini **di rumah, bukan di kelas**. Terukur di laptop Apple Silicon: sekitar **225 detik** dan **1,16 GB** ruang disk. Di laptop Intel atau AMD kira-kira sama.
+Jalankan ini **di rumah, bukan di kelas**. Terukur di Kali VM: sekitar **4 menit** dan **1,2 GB** ruang disk.
 
 Selama prosesnya Anda akan melihat banyak baris pemasangan paket. Itu wajar. Yang Anda tunggu satu baris di akhir:
 
@@ -71,43 +68,40 @@ OK   Toolbox siap. Tag: ceh-toolbox:1.0
 ### Langkah 4. Nyalakan lab uji
 
 ```
-./lab up 00a          # macOS dan Linux
-.\lab.cmd up 00a      # Windows
+./lab up 00a
 ```
 
-Buka <http://localhost:8000> di browser. Kalau halamannya menampilkan tulisan
-`LAB CEH SIAP`, laptop Anda beres. Matikan lagi:
+Buka <http://localhost:8000> di browser **di dalam Kali**. Kalau halamannya menampilkan tulisan `LAB CEH SIAP`, VM Anda beres. Matikan lagi:
 
 ```
 ./lab down 00a
 ```
 
-Kalau langkah ini berhenti dengan pesan `toomanyrequests`, itu batas penarikan Docker Hub dan obatnya ada di [docs/04-kalau-macet.md](docs/04-kalau-macet.md).
+Kalau langkah ini berhenti dengan pesan `toomanyrequests`, itu batas penarikan Docker Hub dan obatnya ada di [docs/03-kalau-macet.md](docs/03-kalau-macet.md).
 
 ---
 
 ## Sebelum hari Senin, kerjakan di rumah
 
-Di kelas, semua laptop keluar lewat satu alamat IP publik yang sama. Docker Hub membatasi penarikan image ke 100 per jam per alamat IP untuk pengguna yang tidak login. Sepuluh laptop yang menarik image barengan menghabiskan jatah itu dalam hitungan menit, dan kelas berhenti.
+Di kelas, semua VM keluar lewat satu alamat IP publik yang sama. Docker Hub membatasi penarikan image ke 100 per jam per alamat IP untuk pengguna yang tidak login. Sepuluh laptop yang menarik image barengan menghabiskan jatah itu dalam hitungan menit, dan kelas berhenti.
 
 Jadi tarik image di rumah, dengan internet Anda sendiri:
 
 ```
-./lab pull core          # macOS dan Linux
-.\lab.cmd pull core      # Windows
+./lab pull core
 ```
 
-Setelah itu image sudah ada di laptop Anda dan lab bisa dinyalakan tanpa menarik apa pun.
+Setelah itu image sudah ada di dalam VM Anda dan lab bisa dinyalakan tanpa menarik apa pun.
 
 ---
 
 ## Perintah yang sering dipakai
 
-Di Windows, ganti `./lab` dengan `.\lab.cmd`. Sisa perintahnya sama persis.
+Semua dijalankan di Terminal, di dalam Kali VM.
 
 | Perintah | Gunanya |
 |---|---|
-| `./lab doctor` | Cek laptop siap atau belum. Jalankan ini duluan |
+| `./lab doctor` | Cek VM siap atau belum. Jalankan ini duluan |
 | `./lab doctor --report` | Sama, tapi hasilnya ditulis ke berkas untuk dikirim ke instruktur |
 | `./lab list` | Daftar semua lab, dikelompokkan per modul CEH |
 | `./lab info 05` | Keterangan satu lab: URL, kredensial, durasi |
@@ -126,7 +120,7 @@ Daftar lengkapnya keluar kalau Anda menjalankan `./lab` tanpa argumen.
 
 ## Aturan main, ini bukan basa-basi
 
-Container lab di laptop Anda **bisa menjangkau jaringan kelas**. Itu sudah diuji, bukan dugaan. Artinya satu perintah pemindaian yang salah arah bukan latihan lagi, tapi pemindaian sungguhan terhadap jaringan kelas dan laptop peserta lain.
+Container lab **sudah dikurung** dan tidak bisa keluar, dan itu diuji bukan diasumsikan. Tapi **Kali VM Anda sendiri tidak dikurung**: perintah yang Anda ketik di Terminal Kali, di luar toolbox lab, bisa menjangkau jaringan kelas dan laptop peserta lain. Itu bukan latihan lagi.
 
 Tiga aturan, tidak ada pengecualian:
 
@@ -161,16 +155,16 @@ Jadwal lima harinya ada di [jadwal.md](jadwal.md).
 
 ---
 
-## Yang dibutuhkan laptop Anda
+## Yang dibutuhkan Kali VM Anda
 
 | Hal | Minimal | Enaknya |
 |---|---|---|
-| RAM untuk Docker | 6 GB | 8 GB atau lebih |
-| Sisa disk kosong | 25 GB | 40 GB |
-| Hak admin di laptop | Wajib | - |
-| Arsitektur | Intel, AMD, atau ARM, semuanya didukung | - |
+| RAM untuk VM | 6 GB | 8 GB |
+| CPU | 2 vCPU | 4 vCPU |
+| Sisa disk DI DALAM VM | 30 GB | 40 GB |
+| Arsitektur | Intel atau AMD | - |
 
-Laptop kantor yang dikunci kebijakan perusahaan sering gagal memasang Docker Desktop. Kalau bisa memilih, pakai laptop pribadi.
+Jangan memberikan lebih dari setengah RAM laptop ke VM. Cara menaikkannya ada di [docs/01-siapkan-kali-vm.md](docs/01-siapkan-kali-vm.md).
 
 ---
 

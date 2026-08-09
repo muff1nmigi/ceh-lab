@@ -125,7 +125,7 @@ Masih gagal, jalankan `./lab reset 00a`.
 
 Kalau yang muncul halaman aplikasi lain yang sama sekali tidak ada hubungannya,
 berarti ada proses di laptop Anda yang sudah memakai port 8000 lebih dulu. Baca
-`docs/04-kalau-macet.md` gejala nomor 1, kasusnya persis itu.
+`docs/03-kalau-macet.md` gejala nomor 1, kasusnya persis itu.
 </details>
 
 ### 2. Masuk ke terminal penyerang dan kenali tempat kerjanya

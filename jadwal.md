@@ -154,4 +154,4 @@ Matikan semua lab yang masih menyala di laptop Anda:
 
 Kalau Anda menambahkan pengecualian antivirus untuk folder lab selama kelas, hapus
 pengecualian itu sekarang. Caranya ada di
-[docs/04-kalau-macet.md](docs/04-kalau-macet.md) bagian 7.
+[docs/03-kalau-macet.md](docs/03-kalau-macet.md) bagian 7.
