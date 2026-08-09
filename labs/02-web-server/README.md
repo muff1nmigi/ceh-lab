@@ -43,7 +43,7 @@ Baca bagian ini sampai habis sebelum mengetik perintah apa pun.
 2. **Jangan menyalin perintah lab ini ke terminal laptop Anda sendiri.**
    Semua perintah penyerangan dijalankan dari dalam toolbox, yang jaringannya
    sudah dikurung. Perintah yang sama, diketik di terminal laptop, menyerang
-   jaringan kantor Course-Net.
+   jaringan kantor tempat kelas berlangsung.
 3. **Webshell yang Anda pasang di Langkah 5 memberikan hak root** di dalam
    container Tomcat. Itu memang tujuannya. Jangan pernah memasang berkas
    seperti itu di server yang bukan milik Anda, dan jangan menyimpannya di

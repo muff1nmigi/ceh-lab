@@ -41,4 +41,5 @@ honeynet/conpot
 #   vulhub/s2-045
 #   wpscanteam/vulnerablewordpress
 #   owasp/zap2docker-stable   (pensiun, pakai zaproxy/zap-stable)
-#   ghcr.io/muffinmigi/ceh-toolbox   (ga pernah dibikin, toolbox dibangun lokal)
+#   ghcr.io/muff1nmigi/ceh-toolbox   (ga pernah dibikin, toolbox dibangun lokal)
+#   ghcr.io/muffinmigi/ceh-toolbox   (idem, plus ejaan akunnya salah)

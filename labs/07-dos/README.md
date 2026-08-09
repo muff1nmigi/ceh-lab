@@ -12,7 +12,7 @@ Yang dilarang keras, dan daftar ini bukan formalitas:
 
 - Laptop teman sebelah, biarpun dia bilang boleh. Dia tidak berwenang
   memberi izin atas jaringan yang bukan miliknya.
-- Wi-Fi kelas, jaringan kantor Course-Net, printer, router, access point.
+- Wi-Fi kelas, jaringan kantor tempat kelas berlangsung, printer, router, access point.
 - Alamat mana pun di internet, termasuk situs milik Anda sendiri yang
   di-hosting orang lain. Yang terganggu bukan cuma situs Anda, tapi juga
   tetangga satu server dan jalur penyedianya.

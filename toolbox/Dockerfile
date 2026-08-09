@@ -1,5 +1,5 @@
 # ============================================================================
-# ceh-toolbox: terminal penyerang untuk lab CEH Course-Net.
+# ceh-toolbox: terminal penyerang untuk lab CEH.
 #
 # Image ini DI-BUILD LOKAL di laptop peserta, bukan ditarik dari registry.
 # Alasannya menghilangkan tiga penyebab gagal sekaligus:
@@ -25,8 +25,8 @@
 FROM kalilinux/kali-rolling:latest
 
 LABEL org.opencontainers.image.title="ceh-toolbox"
-LABEL org.opencontainers.image.description="Terminal penyerang untuk lab CEH Course-Net. Build lokal, multiarch."
-LABEL org.opencontainers.image.source="https://github.com/muffinmigi/ceh-lab"
+LABEL org.opencontainers.image.description="Terminal penyerang untuk lab CEH. Build lokal, multiarch."
+LABEL org.opencontainers.image.source="https://github.com/muff1nmigi/ceh-lab"
 
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
@@ -161,7 +161,7 @@ RUN set -eu; \
 RUN set -eu; \
     printf '%s\n' \
       '#!/bin/sh' \
-      'echo "ceh-toolbox, terminal penyerang lab CEH Course-Net"' \
+      'echo "ceh-toolbox, terminal penyerang lab CEH"' \
       'echo "arsitektur : $(uname -m)"' \
       'echo "wordlist   : /usr/share/wordlists/rockyou-kecil.txt (bawaan image)"' \
       'echo "             /wordlists (dari repo, hanya kalau lab lagi nyala)"' \

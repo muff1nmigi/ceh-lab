@@ -52,7 +52,7 @@ Pasal 332** dengan isi yang sama sekali berbeda, jadi sebutkan selalu "Pasal 332
 KUHP baru" atau "Pasal 332 UU 1 Tahun 2023". Kedua, tidak semua pasal siber UU
 ITE ikut dicabut. **Pasal 33 tentang gangguan terhadap sistem elektronik masih
 berlaku**, beserta ancamannya di Pasal 49, dan itu yang relevan untuk materi
-Denial of Service hari Kamis.
+Denial of Service di Pertemuan 4.
 
 Perhatikan ayat pertama. Yang dilarang di situ cuma "mengakses". Tidak ada
 syarat harus ada kerusakan, tidak ada syarat harus ada data yang dicuri, dan

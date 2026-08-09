@@ -22,7 +22,7 @@ semula. Tidak ada sisa tool keamanan yang bikin antivirus kantor rewel di kemudi
 Ketiga, dan ini soal keamanan: target lab sengaja dikurung supaya tidak bisa menyentuh
 jaringan kelas. Pagar itu dibangun di lapisan jaringan Docker **di dalam VM**. Kalau kalian
 menjalankan lab di laptop langsung, pagarnya berdiri di tempat yang berbeda dan satu
-perintah yang salah arah bisa keluar ke jaringan Course-Net. Itu bukan latihan lagi.
+perintah yang salah arah bisa keluar ke jaringan kantor tempat kelas berlangsung. Itu bukan latihan lagi.
 
 ---
 

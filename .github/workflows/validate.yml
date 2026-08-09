@@ -76,7 +76,7 @@ jobs:
           if isi | grep -qE 'seccomp=unconfined'; then
             echo "seccomp=unconfined balik lagi di $f. Tulis alasannya di lab yang butuh, bukan di sini."; rc=1
           fi
-          if isi | grep -qE 'ghcr\.io/muffinmigi/ceh-toolbox'; then
+          if isi | grep -qE 'ghcr\.io/muff1?nmigi/ceh-toolbox'; then
             echo "$f nunjuk image toolbox di GHCR yang ga pernah ada. Toolbox dibangun lokal."; rc=1
           fi
           [ -f _shared/compose.internet.yaml ] \

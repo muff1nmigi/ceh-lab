@@ -81,7 +81,7 @@ Kalau langkah ini berhenti dengan pesan `toomanyrequests`, itu batas penarikan D
 
 ---
 
-## Sebelum hari Senin, kerjakan di rumah
+## Sebelum pertemuan pertama, kerjakan di rumah
 
 Di kelas, semua VM keluar lewat satu alamat IP publik yang sama. Docker Hub membatasi penarikan image ke 100 per jam per alamat IP untuk pengguna yang tidak login. Sepuluh laptop yang menarik image barengan menghabiskan jatah itu dalam hitungan menit, dan kelas berhenti.
 

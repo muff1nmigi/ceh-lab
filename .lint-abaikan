@@ -15,7 +15,7 @@ CEK=S9,S10,DESC
 # 55 berkas internalnya ke blueprint home itu granularitas yang salah, dan tiap
 # lab baru bakal nambah kewajiban nulis yang ga ada yang baca. Yang blueprint
 # perlu tau cukup satu baris: repo ini apa dan kenapa ada. Itu sudah ditulis di
-# entri Activities/Teaching/Course-Net/ceh-lab.
+# entri repo ini di blueprint home.
 
 # Yang TIDAK dikecualikan, dan sengaja: S4 nol secret mentah, S6 nol muatan berat,
 # S12 memory mewarisi kelas data induknya. Tiga itu tetap berlaku penuh di sini,

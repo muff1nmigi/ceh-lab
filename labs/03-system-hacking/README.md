@@ -28,12 +28,12 @@ yang benar, bukan kerusakan.
 
 Empat port yang dibuka ke laptop Anda semuanya diikat ke 127.0.0.1, jadi
 Domain Controller ini tidak terlihat oleh siapa pun di jaringan kantor
-Course-Net.
+tempat kelas berlangsung.
 
 Sandi, hash, dan nama akun di lab ini karangan. Jangan pernah memakai nilai
 yang sama di sistem sungguhan.
 
-## Sebelum Senin, kerjakan ini di rumah
+## Sebelum pertemuan ini, kerjakan di rumah
 
 Lab ini satu-satunya yang membangun targetnya sendiri. Domain Controller
 di sini bukan image jadi, dia dibangun di laptop Anda dari `dc/Dockerfile`.

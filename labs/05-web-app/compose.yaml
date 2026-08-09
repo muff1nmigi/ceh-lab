@@ -25,7 +25,7 @@ services:
     image: ghcr.io/digininja/dvwa:d45ba3c
     # Aplikasi ini memang sengaja rapuh. Diikat ke 127.0.0.1 supaya cuma
     # laptop yang menjalankannya yang bisa membuka, bukan satu jaringan
-    # kantor Course-Net.
+    # kantor tempat kelas berlangsung.
     networks: [default, edge]
     ports:
       - "127.0.0.1:8500:80"
