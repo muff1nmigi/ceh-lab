@@ -144,14 +144,14 @@ Repo ini lengkap. Sembilan lab sudah diuji jalan dari keadaan bersih pada 6 Agus
 
 | Lab | Sesi | Isi |
 |---|---|---|
-| `00a` | Senin sesi 1 | Smoke test dan orientasi |
-| `01` | Senin sesi 2 | Network scanning dan enumeration |
-| `02` | Selasa sesi 1 | Hacking web server |
-| `03` | Selasa sesi 2 | System hacking dan Active Directory |
-| `04` | Rabu sesi 1 | Social engineering |
-| `05` | Rabu sesi 2 | Meretas aplikasi web |
-| `06` | Kamis sesi 1 | Malware analysis, statik saja |
-| `07` | Kamis sesi 2 | Denial of service, terkurung di dalam lab |
+| `00a` | Pertemuan 1 sesi 1 | Smoke test dan orientasi |
+| `01` | Pertemuan 1 sesi 2 | Network scanning dan enumeration |
+| `02` | Pertemuan 2 sesi 1 | Hacking web server |
+| `03` | Pertemuan 2 sesi 2 | System hacking dan Active Directory |
+| `04` | Pertemuan 3 sesi 1 | Social engineering |
+| `05` | Pertemuan 3 sesi 2 | Meretas aplikasi web |
+| `06` | Pertemuan 4 sesi 1 | Malware analysis, statik saja |
+| `07` | Pertemuan 4 sesi 2 | Denial of service, terkurung di dalam lab |
 | `08` | Jumat sesi 1 | Cloud dan IoT |
 
 Lihat daftarnya kapan saja dengan `./lab list`, dan rincian satu lab dengan
