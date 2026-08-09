@@ -261,9 +261,13 @@ function Cmd-Reset($id){ Detect-Engine; Resolve-Lab $id; Dc @("down","-v","--rem
 function Cmd-Sh($id, $svc) {
   Detect-Engine; Resolve-Lab $id
   if (-not $svc) { $svc = "toolbox" }
-  # Tanpa "| Out-Null" di sini, dan itu memang intinya: ini sesi interaktif.
-  Dc @("exec", $svc, "bash")
-  if ($script:DcExit -ne 0) { Dc @("exec", $svc, "sh") }
+  # Cadangan ke "sh" cuma buat container yang beneran nol bash, dan itu
+  # ditanyain langsung. Alasannya sama persis dengan cmd_sh di skrip "lab":
+  # kode keluar bash bukan penebak yang sah, karena "exit" tanpa argumen
+  # mewarisi status perintah terakhir.
+  Dc @("exec", "-T", $svc, "sh", "-c", "command -v bash >/dev/null 2>&1") | Out-Null
+  # Tanpa "| Out-Null" di dua baris ini, dan itu memang intinya: sesi interaktif.
+  if ($script:DcExit -eq 0) { Dc @("exec", $svc, "bash") } else { Dc @("exec", $svc, "sh") }
 }
 function Cmd-Logs($id) { Detect-Engine; Resolve-Lab $id; Dc @("logs","-f","--tail","100") }
 

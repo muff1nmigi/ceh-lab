@@ -314,7 +314,17 @@ cmd_reset() {
 cmd_sh() {
   detect_engine; resolve_lab "${1:-}"
   local svc="${2:-toolbox}"
-  dc exec "$svc" bash 2>/dev/null || dc exec "$svc" sh
+  # Cadangan ke "sh" cuma buat container yang beneran nol bash, dan itu
+  # ditanyain langsung. JANGAN balik pakai kode keluar bash sebagai penebak:
+  # "exit" tanpa argumen mewarisi status perintah terakhir, jadi peserta yang
+  # keluar sesudah perintah gagal bakal dilempar ke shell kedua dan ngira
+  # labnya nyangkut. Bukan kemungkinan, README lab 01 emang nyuruh dua ping
+  # yang sengaja gagal buat mbuktiin isolasi. Kena 2026-08-09.
+  if dc exec -T "$svc" sh -c 'command -v bash >/dev/null 2>&1' >/dev/null 2>&1; then
+    dc exec "$svc" bash
+  else
+    dc exec "$svc" sh
+  fi
 }
 
 cmd_logs() { detect_engine; resolve_lab "${1:-}"; dc logs -f --tail 100; }
