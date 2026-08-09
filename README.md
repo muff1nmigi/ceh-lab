@@ -152,7 +152,7 @@ Repo ini lengkap. Sembilan lab sudah diuji jalan dari keadaan bersih pada 6 Agus
 | `05` | Pertemuan 3 sesi 2 | Meretas aplikasi web |
 | `06` | Pertemuan 4 sesi 1 | Malware analysis, statik saja |
 | `07` | Pertemuan 4 sesi 2 | Denial of service, terkurung di dalam lab |
-| `08` | Jumat sesi 1 | Cloud dan IoT |
+| `08` | Pertemuan 5 sesi 1 | Cloud dan IoT |
 
 Lihat daftarnya kapan saja dengan `./lab list`, dan rincian satu lab dengan
 `./lab info 03`.
