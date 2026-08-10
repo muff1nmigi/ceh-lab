@@ -462,7 +462,7 @@ Yang mestinya kelihatan:
 21/tcp open  ftp     vsftpd 2.0.8 or later
 |_banner: 220 Server arsip PT Nusantara Digital. Semua aktivitas dicatat.
 | ftp-anon: Anonymous FTP login allowed (FTP code 230)
-|_-rw-r--r--    1 21       21            198 Aug 06 10:32 baca-saya.txt
+|_-rw-rw-r--    1 1000     1000          198 Aug 09 00:27 baca-saya.txt
 ```
 
 Ambil berkasnya:

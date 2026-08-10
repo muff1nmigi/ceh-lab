@@ -71,6 +71,20 @@ services:
   # ---------------------------------------------------------------------
   # FTP. Anonim sengaja dinyalakan lewat konfigurasi yang di-mount, supaya
   # NSE ftp-anon punya sesuatu untuk ditemukan.
+  #
+  # KONFIGURASINYA TIDAK BOLEH DI-MOUNT LANGSUNG KE /etc/vsftpd/vsftpd.conf,
+  # dan ini bukan gaya penulisan. vsftpd MENOLAK berkas konfigurasi yang bukan
+  # milik root, lalu keluar dengan status 2 TANPA mencetak pesan apa pun.
+  # Bind mount membawa uid host apa adanya, dan di laptop Linux uid itu 1000,
+  # yang di dalam image ini kebetulan bernama "arsip". Hasilnya vsftpd mati
+  # diam-diam sementara containernya tetap "Up", karena PID 1 dipegang
+  # "pidproxy ... true" milik image, bukan oleh vsftpd.
+  #
+  # Kenapa ini pernah lolos: di macOS, bind mount dipetakan ulang jadi milik
+  # root, jadi jalur ini berfungsi di mesin penyusun dan gagal di laptop
+  # peserta. Kena di kelas hari pertama, 2026-08-10.
+  #
+  # Jadi berkasnya di-mount ke /tmp lalu disalin dengan kepemilikan root.
   # ---------------------------------------------------------------------
   ftp:
     image: delfer/alpine-ftp-server:latest
@@ -78,8 +92,35 @@ services:
     environment:
       USERS: "arsip|Arsip2026 budi|Password123"
     volumes:
-      - ./files/ftp/vsftpd.conf:/etc/vsftpd/vsftpd.conf:ro
+      - ./files/ftp/vsftpd.conf:/tmp/vsftpd.conf:ro
       - ./files/ftp-anon:/var/lib/ftp:ro
+    # Tiga langkah, dan urutannya penting.
+    #
+    # 1. Salin konfigurasi dengan kepemilikan root, alasannya di atas.
+    # 2. Panggil skrip bawaan image DENGAN argumen "true". Skrip itu membuat
+    #    user dari $USERS lebih dulu, baru memeriksa argumen, jadi memberi
+    #    argumen membuatnya berhenti tepat sesudah user jadi.
+    # 3. Jalankan vsftpd sebagai proses utama container, di foreground.
+    #
+    # Langkah 3 sengaja TIDAK memakai jalur bawaan image. Jalur itu menjalankan
+    # vsftpd sebagai daemon lalu menjaga container hidup dengan
+    # "pidproxy ... true", sehingga layanan yang mati tetap terbaca "Up".
+    # Dengan vsftpd sebagai PID utama, container mati kalau layanannya mati,
+    # dan itu yang seharusnya terjadi.
+    command:
+      - sh
+      - -c
+      - install -o root -g root -m 644 /tmp/vsftpd.conf /etc/vsftpd/vsftpd.conf && /bin/start_vsftpd.sh true && exec vsftpd -opasv_min_port=21000 -opasv_max_port=21010 /etc/vsftpd/vsftpd.conf
+    # Healthcheck ini yang mencegah kegagalan diam terulang. Bukan sekadar
+    # mengetuk port, tetapi menuntut sambutan "220" dari vsftpd, karena port
+    # yang terbuka tanpa layanan yang menjawab persis situasi yang lolos
+    # kemarin.
+    healthcheck:
+      test: ["CMD", "sh", "-c", "echo QUIT | nc -w 2 127.0.0.1 21 | grep -q '^220 '"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
 
   # ---------------------------------------------------------------------
   # SSH. Dipublish ke host supaya peserta bisa membuktikan sendiri bahwa
