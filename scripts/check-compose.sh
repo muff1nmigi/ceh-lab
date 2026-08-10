@@ -162,6 +162,29 @@ check_lab() {
     fi
   fi
 
+  # 7b. TIAP layanan target wajib punya healthcheck. Ini gerbang termahal di
+  # berkas ini, dan dia lahir dari kegagalan nyata di kelas hari pertama,
+  # 2026-08-10: vsftpd di lab 01 mati diam-diam, containernya tetap "Up",
+  # "./lab up" tetap bilang sukses, dan peserta baru menemukannya waktu port
+  # 21 terbaca "closed" di tengah kelas.
+  #
+  # Tanpa healthcheck, "docker compose up --wait" cuma menunggu container
+  # BERJALAN, bukan LAYANANNYA MENJAWAB. Dengan healthcheck, lab yang
+  # layanannya mati gagal keras di "./lab up", di rumah, bukan di kelas.
+  #
+  # toolbox dikecualikan dan itu disengaja: dia terminal tempat peserta
+  # mengetik, bukan target yang harus menjawab protokol.
+  local nohc
+  nohc="$(jq -r '.services | to_entries[] | select(.key != "toolbox") | select(.value.healthcheck == null) | .key' "$cfg" 2>/dev/null)"
+  if [ -n "$nohc" ]; then
+    for entry in $nohc; do
+      fail "    service '$entry' nol healthcheck."
+      info "    Tanpa itu, layanan yang mati tetap terbaca sehat. Lihat lab 01 service ftp buat contohnya."
+    done
+  else
+    ok "    tiap service target punya healthcheck"
+  fi
+
   # 8. Nol image amd64-only di jalur wajib. Jalur wajib = tanpa profile.
   local imgs; imgs="$(COMPOSE_PROFILES='' dc config --images 2>/dev/null | sort -u)"
   local img entry base

@@ -23,6 +23,15 @@
 services:
   tomcat:
     image: tomcat:9.0
+    healthcheck:
+      # Menuntut BARIS STATUS HTTP, bukan sekadar port yang terbuka. Port
+      # terbuka tanpa layanan yang menjawab persis kegagalan yang lolos ke
+      # kelas pada 2026-08-10, dan itu yang dicegah baris ini.
+      test: ["CMD", "bash", "-c", 'exec 3<>/dev/tcp/127.0.0.1/8080 && printf "GET / HTTP/1.0\r\n\r\n" >&3 && head -1 <&3 | grep -q "^HTTP/1"']
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
     hostname: tomcat
     # Image resmi Tomcat 9 mengosongkan webapps/ dan menyimpan aplikasi
     # bawaannya di webapps.dist/. Tanpa penyalinan di bawah, /manager/html
@@ -66,6 +75,15 @@ services:
 
   httpd:
     image: httpd:2.4
+    healthcheck:
+      # Menuntut BARIS STATUS HTTP, bukan sekadar port yang terbuka. Port
+      # terbuka tanpa layanan yang menjawab persis kegagalan yang lolos ke
+      # kelas pada 2026-08-10, dan itu yang dicegah baris ini.
+      test: ["CMD", "bash", "-c", 'exec 3<>/dev/tcp/127.0.0.1/80 && printf "GET / HTTP/1.0\r\n\r\n" >&3 && head -1 <&3 | grep -q "^HTTP/1"']
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 5s
     hostname: web01
     # Berkas conf/extra/httpd-lab.conf berisi seluruh salah konfigurasi lab
     # ini. Barisnya ditambahkan ke httpd.conf saat start, dan pengecekan grep

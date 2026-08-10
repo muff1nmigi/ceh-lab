@@ -48,6 +48,13 @@ services:
 
   victim:
     image: linuxserver/openssh-server:latest
+    healthcheck:
+      # Menuntut sambutan protokol SSH, bukan sekadar port yang terbuka.
+      test: ["CMD", "sh", "-c", "nc -w 3 127.0.0.1 2222 </dev/null | grep -q '^SSH-2.0'"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 5s
     container_name: ${COMPOSE_PROJECT_NAME:-ceh}-victim
     hostname: srv-akuntansi
     # "init: true" SENGAJA TIDAK ADA di sini. Image ini memakai s6-overlay,

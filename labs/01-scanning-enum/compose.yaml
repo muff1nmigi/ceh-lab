@@ -21,6 +21,15 @@ services:
   # ---------------------------------------------------------------------
   web:
     image: httpd:2.4
+    healthcheck:
+      # Menuntut BARIS STATUS HTTP, bukan sekadar port yang terbuka. Port
+      # terbuka tanpa layanan yang menjawab persis kegagalan yang lolos ke
+      # kelas pada 2026-08-10, dan itu yang dicegah baris ini.
+      test: ["CMD", "bash", "-c", 'exec 3<>/dev/tcp/127.0.0.1/80 && printf "GET / HTTP/1.0\r\n\r\n" >&3 && head -1 <&3 | grep -q "^HTTP/1"']
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 5s
     hostname: web-intranet
     networks: [default, edge]
     ports:
@@ -35,6 +44,24 @@ services:
   # ---------------------------------------------------------------------
   smb:
     image: servercontainers/samba:a3.24.1-s4.23.8-r0
+    # Healthcheck ini sengaja MENIMPA punya image, dan alasannya punya
+    # riwayat. Healthcheck bawaan image menghitung proses dengan pola
+    # "ps aux | grep '[0-9] [s]mbd '", yang menuntut angka tepat sebelum nama
+    # proses. Di bawah emulasi apa pun, binfmt_misc memanggil biner lewat
+    # jalur absolut sehingga argv[0] menjadi "/usr/sbin/smbd", karakter
+    # sebelumnya garis miring, polanya meleset, dan container dilaporkan
+    # unhealthy padahal layanannya sehat. Itu menghabiskan waktu penelusuran
+    # panjang pada 2026-08-07.
+    #
+    # Yang di bawah ini bertanya ke PROTOKOLNYA: kalau SMB menjawab dan
+    # menyebutkan daftar share, layanan itu hidup. Nol ketergantungan pada
+    # bentuk baris ps, jadi hasilnya sama di native maupun emulasi.
+    healthcheck:
+      test: ["CMD", "sh", "-c", "smbclient -N -L //127.0.0.1/ 2>/dev/null | grep -q Sharename"]
+      interval: 10s
+      timeout: 10s
+      retries: 6
+      start_period: 20s
     hostname: fs-kantor
     environment:
       # mDNS dan WS-Discovery dimatikan. Keduanya tidak dipakai di latihan
@@ -128,6 +155,13 @@ services:
   # ---------------------------------------------------------------------
   ssh:
     image: linuxserver/openssh-server:version-10.3_p1-r0
+    healthcheck:
+      # Menuntut sambutan protokol SSH, bukan sekadar port yang terbuka.
+      test: ["CMD", "sh", "-c", "nc -w 3 127.0.0.1 2222 </dev/null | grep -q '^SSH-2.0'"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 5s
     hostname: srv-jump
     networks: [default, edge]
     ports:
