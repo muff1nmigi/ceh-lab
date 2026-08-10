@@ -57,6 +57,13 @@ services:
     # membuang penguncian tanpa mengubah cara kredensial dibaca. Peserta
     # tetap diberi tahu bahwa kunci akun itu ada dan merupakan countermeasure
     # resmi, penjelasannya ada di README lab ini.
+    #
+    # Suntingan kedua mematikan buffer AccessLogValve. Bawaan Tomcat menahan
+    # baris log sampai sekitar sepuluh detik, dan Langkah 6 menyuruh peserta
+    # membaca jejak yang baru saja mereka tinggalkan di Langkah 5. Tanpa baris
+    # ini, "grep deploy" mereka menjawab nol, dan pelajaran soal jejak berubah
+    # jadi kesan bahwa labnya rusak. Diukur 2026-08-10: entri terakhir baru
+    # muncul setelah tunggu 12 detik.
     command:
       - sh
       - -c
@@ -65,6 +72,7 @@ services:
         printf '%s\n' '<Context antiResourceLocking="false" privileged="true" />' > /usr/local/tomcat/webapps/manager/META-INF/context.xml
         printf '%s\n' '<Context antiResourceLocking="false" privileged="true" />' > /usr/local/tomcat/webapps/host-manager/META-INF/context.xml
         sed -i 's/realm\.LockOutRealm/realm.CombinedRealm/' /usr/local/tomcat/conf/server.xml
+        sed -i 's|AccessLogValve" directory=|AccessLogValve" buffered="false" directory=|' /usr/local/tomcat/conf/server.xml
         exec catalina.sh run
     volumes:
       - ./tomcat/tomcat-users.xml:/usr/local/tomcat/conf/tomcat-users.xml:ro
